@@ -1137,23 +1137,22 @@ public sealed class TerminaApplication : IInlineOutput
     private void RenderCurrentPage()
     {
         var layoutRoot = GetCurrentLayoutRoot() ?? new TextNode("No page active");
-        if (_toastOverlay != null)
-        {
-            layoutRoot = new StackLayout([layoutRoot, new DeferredNode(() => _toastOverlay)]);
-        }
 
         // Clear the pending buffer (DiffingTerminal) or screen (other terminals)
         _terminal.ClearScreen();
 
-        // Measure and render the layout
+        // Measure and render the page layout
         var available = new Size(_terminal.Width, _terminal.Height);
-        var measured = layoutRoot.Measure(available);
+        layoutRoot.Measure(available);
 
-        // Create a full-screen render context
+        // Render the toast separately. Creating a StackLayout here would subscribe to
+        // the page and toast invalidation streams on every frame, retaining the wrapper
+        // and its subscriptions for the lifetime of the application.
         var context = new RegionRenderContext(_terminal, 0, 0, _terminal.Width, _terminal.Height);
         var bounds = new Rect(0, 0, _terminal.Width, _terminal.Height);
-
         layoutRoot.Render(context, bounds);
+        _toastOverlay?.Measure(available);
+        _toastOverlay?.Render(context, bounds);
 
         // Flush output
         _terminal.Flush();
