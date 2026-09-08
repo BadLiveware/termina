@@ -104,6 +104,11 @@ await foreach (var token in response.TokenStream.WithCancellation(cts.Token))
 
 This serializes streaming updates with input routing, layout invalidation, and rendering. See [Render Loop Threading](/concepts/render-loop-threading) for the full rule.
 
+A fast token stream does not cause one render for each token.
+`InvokeAsync` runs the action on the loop and marks the page dirty.
+The loop then renders one time for each render frame, so the tokens that arrive inside one frame interval share a single layout pass.
+Do not batch the tokens in application code.
+
 ## Step 2: Create the Page
 
 The Page renders the chat interface.

@@ -55,9 +55,37 @@ Use `Post` when you do not need to await completion:
 Post(() => StatusMessage.Value = "Refresh complete.");
 ```
 
+`Post` and `InvokeAsync` run the action on the loop and then mark the page dirty.
+They do not render immediately.
+See [Renders Are Coalesced Per Frame](#renders-are-coalesced-per-frame).
+
+## Renders Are Coalesced Per Frame
+
+The loop renders one time per render frame, not one time per event.
+
+Each event marks the page dirty and requests a render frame.
+This includes loop work from `Post` and `InvokeAsync`, `RequestRedraw()`, input, resize, page invalidation, toast invalidation, and completed navigation.
+The frame arrives after at most one `TerminaRuntimeOptions.RenderFrameInterval`, which is 16 ms by default.
+The frame renders the page one time and then clears the dirty state.
+
+Two results follow:
+
+1. A burst of events inside one frame interval costs one measure pass, one render pass, and one flush. It does not cost one of each per event.
+2. A frame that finds no dirty page does no layout work.
+
+A high-rate background stream that calls `InvokeAsync` for each item therefore costs one layout for each frame interval.
+Do not batch these calls in application code.
+
+Renders always occur on the loop thread.
+Inline commits through `IInlineOutput.CommitAsync` still render at the commit, because the commit must settle before the call completes.
+
+`RenderFrameInterval` sets the pace.
+Increase it to accept more latency for fewer renders.
+Decrease it for a faster response to single events.
+
 ## RequestRedraw Is Not Marshaling
 
-`RequestRedraw()` only asks the application loop to render again. It does not make previous state writes safe.
+`RequestRedraw()` only asks the application loop to render again on the next frame. It does not make previous state writes safe.
 
 Avoid this pattern from background callbacks:
 

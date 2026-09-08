@@ -71,6 +71,7 @@ public sealed class TerminaApplication : IInlineOutput
     private bool _kittyKeyboardPushed;
     private bool _mouseEnabledByApp;
     private bool _wheelScrollEnabledByApp;
+    private bool _renderDirty;
     private int _pendingNavigationRequests;
     private TerminalInputCapabilities _inputCapabilities = new(
         TerminalCapabilityAvailability.Unknown,
@@ -946,11 +947,41 @@ public sealed class TerminaApplication : IInlineOutput
             return;
         }
 
+        var isRenderFrame = evt is RenderFrameRequested;
         ProcessEvent(evt);
 
         // If this event enqueued a navigation, do not render the page that is
-        // one event-loop turn away from being replaced.
+        // one event-loop turn away from being replaced. The navigation event
+        // marks the page dirty again when it completes.
         if (HasPendingNavigationRequests())
+            return;
+
+        if (isRenderFrame)
+        {
+            RenderDirtyPage();
+            return;
+        }
+
+        MarkRenderDirty();
+    }
+
+    /// <summary>
+    /// Marks the page as changed and asks for the render frame that draws it.
+    /// </summary>
+    /// <remarks>
+    /// Events do not render on their own. Each event marks the page dirty and requests one
+    /// frame, so a burst of events inside a single <see cref="TerminaRuntimeOptions.RenderFrameInterval" />
+    /// costs one layout and one flush instead of one per event.
+    /// </remarks>
+    private void MarkRenderDirty()
+    {
+        _renderDirty = true;
+        _renderFrameProvider.RequestFrame();
+    }
+
+    private void RenderDirtyPage()
+    {
+        if (!_renderDirty)
             return;
 
         RenderCurrentPage();
@@ -1136,6 +1167,8 @@ public sealed class TerminaApplication : IInlineOutput
     /// </remarks>
     private void RenderCurrentPage()
     {
+        _renderDirty = false;
+
         var layoutRoot = GetCurrentLayoutRoot() ?? new TextNode("No page active");
 
         // Clear the pending buffer (DiffingTerminal) or screen (other terminals)

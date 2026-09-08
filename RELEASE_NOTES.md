@@ -1,3 +1,29 @@
+# Unreleased
+
+####
+
+**Performance**
+
+- **Coalesced renders onto the render frame**
+  - An event marks the page dirty and requests one render frame. It no longer renders immediately.
+  - A burst of events inside one `RenderFrameInterval` costs one measure pass, one render pass, and one flush.
+  - A render frame that finds no dirty page does no layout work.
+  - `Post`, `InvokeAsync`, `RequestRedraw`, input, resize, invalidation, and completed navigation all use this path.
+
+**New Features**
+
+- **Added `TerminaRenderFrameProvider.RequestFrame()`**
+  - The method requests one render frame when the provider holds no R3 frame work items.
+  - Calls made while a frame is queued or scheduled coalesce into that frame.
+
+**Compatibility**
+
+- `Post`, `InvokeAsync`, and `RequestRedraw` keep their signatures and their loop-thread guarantees.
+- A render occurs at most one `RenderFrameInterval` after the event that requested it.
+- Inline commits through `IInlineOutput.CommitAsync` still render at the commit.
+
+####
+
 # Release Notes — Termina 0.17.0-beta.5
 
 **Release date:** 2026-08-11
