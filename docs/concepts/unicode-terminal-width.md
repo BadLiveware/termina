@@ -57,6 +57,7 @@ Rendering and layout code must follow these rules:
 
 - Use `DisplayWidth.GetColumnCount` for visual width.
 - Use `DisplayWidth.EnumerateCells` when rendering text element by text element.
+- Prefer the `ReadOnlySpan<char>` overloads of `GetColumnCount`, `GetStringIndexForColumnCount`, and `EnumerateCells` on measure and render paths. They report the same results and allocate nothing.
 - Use `DisplayWidth.SliceByColumns`, `TruncateToColumns`, or `TruncateStartToColumns` for clipping and truncation.
 - Use `DisplayWidth.CursorPositionToColumn` when converting a source cursor index to an x-position.
 - Use `DisplayWidth.GetTextElementAt` when rendering the glyph under a cursor.

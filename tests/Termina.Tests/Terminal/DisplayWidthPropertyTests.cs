@@ -23,7 +23,7 @@ namespace Termina.Tests.Terminal;
 /// These tests assert, so a failure prints the expected and actual values, not only the input.
 /// </para>
 /// <para>
-/// THE ORACLE. Every rule is stated against <see cref="DisplayWidth.EnumerateCells"/>, the cell
+/// THE ORACLE. Every rule is stated against <see cref="DisplayWidth.EnumerateCells(string)"/>, the cell
 /// model that all the other methods must agree with. So the tests do not hand-write expected
 /// output; they compare a method to the cell model. A "cell" is one display unit (a letter, a
 /// letter with its marks, or one emoji). A "column" is one terminal column; a cell uses 0, 1, or 2

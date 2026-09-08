@@ -16,11 +16,22 @@
   - The method requests one render frame when the provider holds no R3 frame work items.
   - Calls made while a frame is queued or scheduled coalesce into that frame.
 
+- **Added span overloads to `DisplayWidth`**
+  - `EnumerateCells(ReadOnlySpan<char>)` returns a `DisplayCellEnumerator` that reports each text element as a `DisplayCellRange` without an allocation.
+  - `GetColumnCount(ReadOnlySpan<char>)` and `GetStringIndexForColumnCount(ReadOnlySpan<char>, int)` measure a span directly.
+  - `EnumerateCells(string)` keeps its `IEnumerable<DisplayCell>` result and its current values.
+
+- **Measured terminal columns on spans**
+  - `GetColumnCount`, `GetStringIndexForColumnCount`, `TruncateToColumns`, `TruncateStartToColumns`, `SliceByColumns`, and `RegionRenderContext.WriteAt` allocate nothing for a width query or for text that already fits.
+  - A clip that removes text allocates only the returned string.
+  - The terminals and the text nodes write cells from the span path, so a frame no longer builds one string for each glyph.
+
 **Compatibility**
 
 - `Post`, `InvokeAsync`, and `RequestRedraw` keep their signatures and their loop-thread guarantees.
 - A render occurs at most one `RenderFrameInterval` after the event that requested it.
 - Inline commits through `IInlineOutput.CommitAsync` still render at the commit.
+- The column rules for wide forms, emoji presentation, keycaps, combining marks, and zero-width characters do not change.
 
 ####
 

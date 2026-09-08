@@ -11,6 +11,10 @@ namespace Termina.Terminal;
 /// </summary>
 internal sealed class InlineTerminal : IAnsiTerminal
 {
+    private const int TabStopColumns = 8;
+
+    private static ReadOnlySpan<char> SingleSpace => " ";
+
     private readonly IAnsiTerminal _inner;
     private readonly IInlineTerminalControl _inlineControl;
     private FrameBuffer _pendingFrame;
@@ -40,13 +44,15 @@ internal sealed class InlineTerminal : IAnsiTerminal
 
     public void Write(string text)
     {
-        foreach (var cell in DisplayWidth.EnumerateCells(text))
-            WriteTextElement(cell.Text, cell.ColumnWidth);
+        var span = text.AsSpan();
+        foreach (var cell in DisplayWidth.EnumerateCells(span))
+            WriteTextElement(span.Slice(cell.StartIndex, cell.Length), cell.ColumnWidth);
     }
 
     public void Write(char c)
     {
-        WriteTextElement(c.ToString(), DisplayWidth.GetColumnCount(c));
+        ReadOnlySpan<char> element = stackalloc char[1] { c };
+        WriteTextElement(element, DisplayWidth.GetColumnCount(c));
     }
 
     public void SetForeground(Color color)
@@ -190,22 +196,25 @@ internal sealed class InlineTerminal : IAnsiTerminal
         _liveRows = nextLiveRows;
     }
 
-    private void WriteTextElement(string text, int columnWidth)
+    private void WriteTextElement(ReadOnlySpan<char> text, int columnWidth)
     {
-        switch (text)
+        if (text.Length == 1)
         {
-            case "\n":
-                _cursorX = 0;
-                _cursorY++;
-                return;
-            case "\r":
-                _cursorX = 0;
-                return;
-            case "\t":
-                var nextTab = ((_cursorX / 8) + 1) * 8;
-                while (_cursorX < nextTab && _cursorX < Width)
-                    WriteTextElement(" ", 1);
-                return;
+            switch (text[0])
+            {
+                case '\n':
+                    _cursorX = 0;
+                    _cursorY++;
+                    return;
+                case '\r':
+                    _cursorX = 0;
+                    return;
+                case '\t':
+                    var nextTab = ((_cursorX / TabStopColumns) + 1) * TabStopColumns;
+                    while (_cursorX < nextTab && _cursorX < Width)
+                        WriteTextElement(SingleSpace, 1);
+                    return;
+            }
         }
 
         if (columnWidth <= 0 || _cursorY >= Height)
@@ -224,7 +233,7 @@ internal sealed class InlineTerminal : IAnsiTerminal
             _cursorX,
             _cursorY,
             new TerminalCell(
-                text,
+                CellText.From(text),
                 _currentForeground,
                 _currentBackground,
                 _currentDecoration));

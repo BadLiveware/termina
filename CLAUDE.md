@@ -130,6 +130,7 @@ Termina renders to terminal cells, not UTF-16 characters. Any code that measures
 
 - Use `DisplayWidth.GetColumnCount` for visual width
 - Use `DisplayWidth.EnumerateCells` when rendering text element by text element
+- Use the `ReadOnlySpan<char>` overloads of `GetColumnCount`, `GetStringIndexForColumnCount`, and `EnumerateCells` on measure and render paths; the `string` overloads allocate one string for each text element
 - Use `DisplayWidth.SliceByColumns`, `TruncateToColumns`, or `TruncateStartToColumns` for clipping and truncation
 - Use `DisplayWidth.CursorPositionToColumn` when converting source cursor indexes to screen columns
 - Use `DisplayWidth.GetTextElementAt` when drawing the glyph under a cursor

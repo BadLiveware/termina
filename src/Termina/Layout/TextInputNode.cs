@@ -200,8 +200,9 @@ public sealed class TextInputNode : TextInputBaseNode
                 var selStart = Math.Min(_selectionStart, _cursorPosition) + prefixWidth;
                 var selEnd = Math.Max(_selectionStart, _cursorPosition) + prefixWidth;
                 var activeColumn = activeStart;
+                var activeSpan = activeText.AsSpan();
 
-                foreach (var cell in DisplayWidth.EnumerateCells(activeText))
+                foreach (var cell in DisplayWidth.EnumerateCells(activeSpan))
                 {
                     var cellStart = activeColumn;
                     var cellEnd = cellStart + cell.ColumnWidth;
@@ -228,7 +229,10 @@ public sealed class TextInputNode : TextInputBaseNode
                             inputContext.SetForeground(Foreground.Value);
                     }
 
-                    inputContext.WriteAt(cellStart - _scrollOffset, 0, cell.Text);
+                    inputContext.WriteAt(
+                        cellStart - _scrollOffset,
+                        0,
+                        CellText.From(activeSpan.Slice(cell.StartIndex, cell.Length)));
                 }
             }
             else
@@ -276,7 +280,8 @@ public sealed class TextInputNode : TextInputBaseNode
         int drawEnd)
     {
         var column = absoluteStartColumn;
-        foreach (var cell in DisplayWidth.EnumerateCells(text))
+        var span = text.AsSpan();
+        foreach (var cell in DisplayWidth.EnumerateCells(span))
         {
             var cellStart = column;
             var cellEnd = cellStart + cell.ColumnWidth;
@@ -288,7 +293,10 @@ public sealed class TextInputNode : TextInputBaseNode
             if (cellStart < drawStart || cellEnd > drawEnd)
                 continue;
 
-            context.WriteAt(cellStart - scrollOffset, 0, cell.Text);
+            context.WriteAt(
+                cellStart - scrollOffset,
+                0,
+                CellText.From(span.Slice(cell.StartIndex, cell.Length)));
         }
     }
 }
