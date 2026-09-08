@@ -25,6 +25,10 @@ namespace Termina.Terminal;
 /// </remarks>
 public sealed class DiffingTerminal : IAnsiTerminal, IDisposable
 {
+    private const int TabStopColumns = 8;
+
+    private static ReadOnlySpan<char> SingleSpace => " ";
+
     private readonly IAnsiTerminal _inner;
     private FrameBuffer _currentFrame;
     private FrameBuffer _pendingFrame;
@@ -92,41 +96,45 @@ public sealed class DiffingTerminal : IAnsiTerminal, IDisposable
     /// <inheritdoc />
     public void Write(string text)
     {
-        foreach (var cell in DisplayWidth.EnumerateCells(text))
+        var span = text.AsSpan();
+        foreach (var cell in DisplayWidth.EnumerateCells(span))
         {
-            WriteTextElementToBuffer(cell.Text, cell.ColumnWidth);
+            WriteTextElementToBuffer(span.Slice(cell.StartIndex, cell.Length), cell.ColumnWidth);
         }
     }
 
     /// <inheritdoc />
     public void Write(char c)
     {
-        WriteTextElementToBuffer(c.ToString(), DisplayWidth.GetColumnCount(c));
+        ReadOnlySpan<char> element = stackalloc char[1] { c };
+        WriteTextElementToBuffer(element, DisplayWidth.GetColumnCount(c));
     }
 
-    private void WriteTextElementToBuffer(string text, int columnWidth)
+    private void WriteTextElementToBuffer(ReadOnlySpan<char> text, int columnWidth)
     {
         if (_cursorX < 0 || _cursorX >= Width || _cursorY < 0 || _cursorY >= Height)
             return;
 
         // Handle special characters
-        switch (text)
+        if (text.Length == 1)
         {
-            case "\n":
-                _cursorY++;
-                _cursorX = 0;
-                return;
-            case "\r":
-                _cursorX = 0;
-                return;
-            case "\t":
-                // Tab to next 8-column boundary
-                var nextTab = ((_cursorX / 8) + 1) * 8;
-                while (_cursorX < nextTab && _cursorX < Width)
-                {
-                    WriteTextElementToBuffer(" ", 1);
-                }
-                return;
+            switch (text[0])
+            {
+                case '\n':
+                    _cursorY++;
+                    _cursorX = 0;
+                    return;
+                case '\r':
+                    _cursorX = 0;
+                    return;
+                case '\t':
+                    var nextTab = ((_cursorX / TabStopColumns) + 1) * TabStopColumns;
+                    while (_cursorX < nextTab && _cursorX < Width)
+                    {
+                        WriteTextElementToBuffer(SingleSpace, 1);
+                    }
+                    return;
+            }
         }
 
         if (columnWidth <= 0)
@@ -143,7 +151,11 @@ public sealed class DiffingTerminal : IAnsiTerminal, IDisposable
         // Write the cell to pending buffer
         ClearWideCellAt(_cursorX, _cursorY);
 
-        var cell = new TerminalCell(text, _currentForeground, _currentBackground, _currentDecoration);
+        var cell = new TerminalCell(
+            CellText.From(text),
+            _currentForeground,
+            _currentBackground,
+            _currentDecoration);
         _pendingFrame.TrySet(_cursorX, _cursorY, cell);
 
         if (columnWidth == 2 && _cursorX + 1 < Width)

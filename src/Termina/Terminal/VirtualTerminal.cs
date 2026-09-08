@@ -11,6 +11,10 @@ namespace Termina.Terminal;
 /// </summary>
 public sealed class VirtualTerminal : IAnsiTerminal, IInlineTerminalControl
 {
+    private const int TabStopColumns = 8;
+
+    private static ReadOnlySpan<char> SingleSpace => " ";
+
     private char[,] _buffer;
     private string[,] _textBuffer;
     private bool[,] _continuation;
@@ -95,9 +99,10 @@ public sealed class VirtualTerminal : IAnsiTerminal, IInlineTerminalControl
         if (text.Contains('\u001b'))
             return;
 
-        foreach (var cell in DisplayWidth.EnumerateCells(text))
+        var span = text.AsSpan();
+        foreach (var cell in DisplayWidth.EnumerateCells(span))
         {
-            WriteTextElement(cell.Text, cell.ColumnWidth);
+            WriteTextElement(span.Slice(cell.StartIndex, cell.Length), cell.ColumnWidth);
         }
     }
 
@@ -105,30 +110,29 @@ public sealed class VirtualTerminal : IAnsiTerminal, IInlineTerminalControl
     public void Write(char c)
     {
         _rawOutput.Add(c.ToString());
-        WriteTextElement(c.ToString(), DisplayWidth.GetColumnCount(c));
+        ReadOnlySpan<char> element = stackalloc char[1] { c };
+        WriteTextElement(element, DisplayWidth.GetColumnCount(c));
     }
 
-    private void WriteTextElement(string text, int columnWidth)
+    private void WriteTextElement(ReadOnlySpan<char> text, int columnWidth)
     {
-        if (text == "\n")
+        if (text.Length == 1)
         {
-            _cursorX = 0;
-            AdvanceLine();
-            return;
-        }
-
-        if (text == "\r")
-        {
-            _cursorX = 0;
-            return;
-        }
-
-        if (text == "\t")
-        {
-            var nextTab = ((_cursorX / 8) + 1) * 8;
-            while (_cursorX < nextTab && _cursorX < Width)
-                WriteTextElement(" ", 1);
-            return;
+            switch (text[0])
+            {
+                case '\n':
+                    _cursorX = 0;
+                    AdvanceLine();
+                    return;
+                case '\r':
+                    _cursorX = 0;
+                    return;
+                case '\t':
+                    var nextTab = ((_cursorX / TabStopColumns) + 1) * TabStopColumns;
+                    while (_cursorX < nextTab && _cursorX < Width)
+                        WriteTextElement(SingleSpace, 1);
+                    return;
+            }
         }
 
         if (columnWidth <= 0)
@@ -150,7 +154,7 @@ public sealed class VirtualTerminal : IAnsiTerminal, IInlineTerminalControl
             ClearWideCellAt(_cursorX, _cursorY);
 
             _buffer[_cursorY, _cursorX] = text[0];
-            _textBuffer[_cursorY, _cursorX] = text;
+            _textBuffer[_cursorY, _cursorX] = CellText.From(text);
             _continuation[_cursorY, _cursorX] = false;
             _foreground[_cursorY, _cursorX] = _currentForeground;
             _background[_cursorY, _cursorX] = _currentBackground;

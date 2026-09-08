@@ -2174,21 +2174,37 @@ namespace Termina.Terminal
         public int StartIndex { get; init; }
         public string Text { get; init; }
     }
+    public readonly struct DisplayCellRange : System.IEquatable<Termina.Terminal.DisplayCellRange>
+    {
+        public DisplayCellRange(int StartIndex, int Length, int ColumnWidth) { }
+        public int ColumnWidth { get; init; }
+        public int Length { get; init; }
+        public int StartIndex { get; init; }
+    }
     public static class DisplayWidth
     {
         public static int ClampToTextElementBoundary(string text, int charIndex) { }
         public static int CursorPositionToColumn(string text, int charIndex) { }
+        public static Termina.Terminal.DisplayWidth.DisplayCellEnumerator EnumerateCells(System.ReadOnlySpan<char> text) { }
         public static System.Collections.Generic.IEnumerable<Termina.Terminal.DisplayCell> EnumerateCells(string text) { }
+        public static int GetColumnCount(System.ReadOnlySpan<char> text) { }
         public static int GetColumnCount(char c) { }
         public static int GetColumnCount(string text) { }
         public static int GetNextTextElementIndex(string text, int charIndex) { }
         public static int GetPreviousTextElementIndex(string text, int charIndex) { }
+        public static int GetStringIndexForColumnCount(System.ReadOnlySpan<char> text, int maxColumns) { }
         public static int GetStringIndexForColumnCount(string text, int maxColumns) { }
         public static string GetTextElementAt(string text, int charIndex) { }
         public static string SanitizeTerminalText(string text) { }
         public static string SliceByColumns(string text, int startColumn, int maxColumns) { }
         public static string TruncateStartToColumns(string text, int maxColumns) { }
         public static string TruncateToColumns(string text, int maxColumns) { }
+        public ref struct DisplayCellEnumerator
+        {
+            public Termina.Terminal.DisplayCellRange Current { get; }
+            public Termina.Terminal.DisplayWidth.DisplayCellEnumerator GetEnumerator() { }
+            public bool MoveNext() { }
+        }
     }
     public sealed class FrameBuffer
     {
