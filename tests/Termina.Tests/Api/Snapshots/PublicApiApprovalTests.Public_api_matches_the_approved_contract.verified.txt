@@ -1807,6 +1807,7 @@ namespace Termina.Reactive
         public void Dispose() { }
         public override long GetFrameCount() { }
         public override void Register(R3.IFrameRunnerWorkItem callback) { }
+        public void RequestFrame() { }
     }
 }
 namespace Termina.Rendering

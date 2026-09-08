@@ -3,7 +3,9 @@
 
 using System.Reflection;
 using System.Threading.Channels;
+using Microsoft.Extensions.Time.Testing;
 using R3;
+using Termina.Hosting;
 using Termina.Input;
 using Termina.Layout;
 using Termina.Navigation;
@@ -25,6 +27,8 @@ namespace Termina.Tests;
 /// </summary>
 public class NavigationThreadSafetyTests
 {
+    private static readonly TimeSpan RenderFrameInterval = TimeSpan.FromMilliseconds(16);
+
     [Fact]
     public void ViewModelInitiatedNavigation_IsPostedToEventChannel_NotRunSynchronously()
     {
@@ -72,7 +76,8 @@ public class NavigationThreadSafetyTests
     public void ProcessEventAndMaybeRender_SkipsRender_WhenInputQueuesNavigation()
     {
         var terminal = new VirtualTerminal();
-        var app = new TerminaApplication(terminal);
+        var timeProvider = new FakeTimeProvider();
+        var app = CreateApp(terminal, timeProvider);
         app.RegisterRoute<InputNavigatingPage, InputNavigatingViewModel>("/start");
         app.RegisterRoute<PlainPage, IdleViewModel>("/dest");
         app.NavigateTo("/start");
@@ -90,6 +95,7 @@ public class NavigationThreadSafetyTests
         Assert.Equal("/dest", navRequest.PageKey);
 
         InvokeProcessEventAndMaybeRender(app, navRequest);
+        AdvanceRenderFrame(app, timeProvider);
 
         Assert.Equal("/dest", app.CurrentPath);
         Assert.True(terminal.RawOutput.Count > outputCountBeforeInput);
@@ -100,7 +106,8 @@ public class NavigationThreadSafetyTests
     public void ProcessEventAndMaybeRender_SkipsIntermediateRender_WhenNavigationQueuesNavigation()
     {
         var terminal = new VirtualTerminal();
-        var app = new TerminaApplication(terminal);
+        var timeProvider = new FakeTimeProvider();
+        var app = CreateApp(terminal, timeProvider);
         app.RegisterRoute<InputNavigatingToMiddlePage, InputNavigatingToMiddleViewModel>("/start");
         app.RegisterRoute<RedirectingPage, RedirectingViewModel>("/middle");
         app.RegisterRoute<FinalPage, IdleViewModel>("/final");
@@ -125,10 +132,39 @@ public class NavigationThreadSafetyTests
         Assert.Equal("/final", finalNavRequest.PageKey);
 
         InvokeProcessEventAndMaybeRender(app, finalNavRequest);
+        AdvanceRenderFrame(app, timeProvider);
 
         Assert.Equal("/final", app.CurrentPath);
         Assert.True(terminal.RawOutput.Count > outputCountBeforeInput);
         Assert.Contains("final", terminal.ToString());
+    }
+
+    private static TerminaApplication CreateApp(VirtualTerminal terminal, TimeProvider timeProvider)
+    {
+        var options = new TerminaRuntimeOptions
+        {
+            TimeProvider = timeProvider,
+            RenderFrameInterval = RenderFrameInterval,
+        };
+
+        return new TerminaApplication(terminal, options);
+    }
+
+    /// <summary>
+    /// Renders are coalesced onto the render frame, so a completed navigation draws when the
+    /// frame it requested arrives.
+    /// </summary>
+    private static void AdvanceRenderFrame(TerminaApplication app, FakeTimeProvider timeProvider)
+    {
+        timeProvider.Advance(RenderFrameInterval);
+
+        var field = typeof(TerminaApplication).GetField(
+            "_eventChannel", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(field);
+
+        var channel = (Channel<object>)field!.GetValue(app)!;
+        while (channel.Reader.TryRead(out var evt))
+            InvokeProcessEventAndMaybeRender(app, evt);
     }
 
     private static NavigationRequested ReadQueuedNavigation(TerminaApplication app)

@@ -121,6 +121,54 @@ public class RenderFrameProviderTests
     }
 
     [Fact]
+    public void RequestFrame_WithoutWorkItems_DeliversOneFrameAfterTheInterval()
+    {
+        var timeProvider = new FakeTimeProvider();
+        var frameRequests = 0;
+        using var provider = new TerminaRenderFrameProvider(
+            () => frameRequests++,
+            timeProvider,
+            TimeSpan.FromMilliseconds(10));
+
+        provider.RequestFrame();
+        provider.RequestFrame();
+        provider.RequestFrame();
+
+        Assert.Equal(0, frameRequests);
+
+        timeProvider.Advance(TimeSpan.FromMilliseconds(9));
+        Assert.Equal(0, frameRequests);
+
+        timeProvider.Advance(TimeSpan.FromMilliseconds(1));
+        Assert.Equal(1, frameRequests);
+
+        provider.AdvanceFrame();
+        timeProvider.Advance(TimeSpan.FromMilliseconds(100));
+
+        Assert.Equal(1, frameRequests);
+    }
+
+    [Fact]
+    public void RequestFrame_AfterAServedFrame_SchedulesTheNextFrame()
+    {
+        var timeProvider = new FakeTimeProvider();
+        var frameRequests = 0;
+        using var provider = new TerminaRenderFrameProvider(
+            () => frameRequests++,
+            timeProvider,
+            TimeSpan.FromMilliseconds(10));
+
+        provider.RequestFrame();
+        timeProvider.Advance(TimeSpan.FromMilliseconds(10));
+        provider.AdvanceFrame();
+
+        provider.RequestFrame();
+        timeProvider.Advance(TimeSpan.FromMilliseconds(10));
+
+        Assert.Equal(2, frameRequests);
+    }
+
+    [Fact]
     public void AsLayout_WithFrameProvider_MarshalsInvalidationToFrame()
     {
         var app = new TerminaApplication(new VirtualTerminal());

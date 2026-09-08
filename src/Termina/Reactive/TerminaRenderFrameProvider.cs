@@ -10,7 +10,9 @@ namespace Termina.Reactive;
 /// </summary>
 /// <remarks>
 /// Registered frame work items are executed on the Termina event loop thread, immediately
-/// before the render pass for the frame event that woke the loop.
+/// before the render pass for the frame event that woke the loop. The application also
+/// requests frames through <see cref="RequestFrame" /> when an event marks the page dirty,
+/// so renders are paced at one per frame interval whether or not R3 frame work is active.
 /// </remarks>
 public sealed class TerminaRenderFrameProvider : FrameProvider, IDisposable
 {
@@ -23,6 +25,7 @@ public sealed class TerminaRenderFrameProvider : FrameProvider, IDisposable
     private long _frameCount;
     private bool _frameQueued;
     private bool _timerScheduled;
+    private bool _frameRequested;
     private bool _disposed;
 
     internal TerminaRenderFrameProvider(
@@ -51,6 +54,33 @@ public sealed class TerminaRenderFrameProvider : FrameProvider, IDisposable
         {
             return _frameCount;
         }
+    }
+
+    /// <summary>
+    /// Requests one render frame, whether or not this provider has registered frame work.
+    /// </summary>
+    /// <remarks>
+    /// The frame arrives after at most one frame interval. Calls made while a frame is
+    /// already queued or scheduled coalesce into that frame.
+    /// </remarks>
+    public void RequestFrame()
+    {
+        var scheduleTimer = false;
+        lock (_gate)
+        {
+            if (_disposed)
+                return;
+
+            _frameRequested = true;
+            if (!_frameQueued && !_timerScheduled)
+            {
+                _timerScheduled = true;
+                scheduleTimer = true;
+            }
+        }
+
+        if (scheduleTimer)
+            _timer.Change(_frameInterval, Timeout.InfiniteTimeSpan);
     }
 
     /// <inheritdoc />
@@ -92,6 +122,7 @@ public sealed class TerminaRenderFrameProvider : FrameProvider, IDisposable
                 return;
 
             _frameQueued = false;
+            _frameRequested = false;
             snapshot = _items.ToArray();
             frameCount = _frameCount;
         }
@@ -140,6 +171,7 @@ public sealed class TerminaRenderFrameProvider : FrameProvider, IDisposable
             _items.Clear();
             _frameQueued = false;
             _timerScheduled = false;
+            _frameRequested = false;
         }
 
         _timer.Dispose();
@@ -151,7 +183,7 @@ public sealed class TerminaRenderFrameProvider : FrameProvider, IDisposable
         lock (_gate)
         {
             _timerScheduled = false;
-            if (_disposed || _frameQueued || _items.Count == 0)
+            if (_disposed || _frameQueued || (_items.Count == 0 && !_frameRequested))
                 return;
 
             _frameQueued = true;
