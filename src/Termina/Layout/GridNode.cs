@@ -65,6 +65,7 @@ public sealed class GridNode : LayoutNode, IFocusable, IInvalidatingNode
     private int _focusedRow;
     private int _focusedCol;
     private bool _hasFocus;
+    private bool _isActive;
     private bool _disposed;
 
     /// <summary>
@@ -278,6 +279,8 @@ public sealed class GridNode : LayoutNode, IFocusable, IInvalidatingNode
 
         _cells[row, col] = content;
         _spans[row, col] = (colSpan, rowSpan);
+        if (content is not null)
+            ApplyRuntimeContextToChild(content);
 
         // Mark spanned cells as occupied (null content, 0 span indicates part of another cell).
         for (var r = row; r < row + rowSpan; r++)
@@ -298,6 +301,9 @@ public sealed class GridNode : LayoutNode, IFocusable, IInvalidatingNode
             _cellSubscriptions[content] =
                 invalidating.Invalidated.Subscribe(_ => _invalidated.OnNext(Unit.Default));
         }
+
+        if (_isActive && content is IActivatableNode activatable)
+            activatable.OnActivate();
 
         return this;
     }
@@ -903,6 +909,7 @@ public sealed class GridNode : LayoutNode, IFocusable, IInvalidatingNode
     /// <inheritdoc />
     public override void OnActivate()
     {
+        _isActive = true;
         for (var r = 0; r < _rows; r++)
         {
             for (var c = 0; c < _cols; c++)
@@ -917,6 +924,7 @@ public sealed class GridNode : LayoutNode, IFocusable, IInvalidatingNode
     /// <inheritdoc />
     public override void OnDeactivate()
     {
+        _isActive = false;
         for (var r = 0; r < _rows; r++)
         {
             for (var c = 0; c < _cols; c++)

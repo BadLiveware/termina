@@ -1124,6 +1124,8 @@ namespace Termina.Layout
         public bool ShowScrollbar { get; set; }
         public override void Dispose() { }
         public override Termina.Layout.Size Measure(Termina.Layout.Size available) { }
+        public override void OnActivate() { }
+        public override void OnDeactivate() { }
         public void PageDown() { }
         public void PageUp() { }
         public override void Render(Termina.Rendering.IRenderContext context, Termina.Layout.Rect bounds) { }

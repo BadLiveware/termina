@@ -101,9 +101,8 @@ public sealed class ReactiveLayoutNode : LayoutNode, IInvalidatingNode
     /// <inheritdoc />
     public override void OnActivate()
     {
-        _isActive = true;
-
-        // If subscription was disposed during deactivation, recreate it
+        // Recreate the source subscription before the node becomes active. A source that replays its
+        // current value then only swaps the child, and the child is activated one time below.
         if (_subscription == null)
         {
             _subscription = _source.Subscribe(node =>
@@ -127,6 +126,8 @@ public sealed class ReactiveLayoutNode : LayoutNode, IInvalidatingNode
                     _invalidated.OnNext(Unit.Default);
                 });
         }
+
+        _isActive = true;
 
         // Re-subscribe to current child's invalidation events (might have been disposed)
         SubscribeToChildInvalidation(_currentChild);
@@ -262,9 +263,8 @@ public sealed class ReactiveLayoutNode<T> : LayoutNode, IInvalidatingNode
     /// <inheritdoc />
     public override void OnActivate()
     {
-        _isActive = true;
-
-        // If subscription was disposed during deactivation, recreate it
+        // Recreate the source subscription before the node becomes active. A source that replays its
+        // current value then only swaps the child, and the child is activated one time below.
         if (_subscription == null)
         {
             _subscription = _source.Subscribe(value =>
@@ -288,6 +288,8 @@ public sealed class ReactiveLayoutNode<T> : LayoutNode, IInvalidatingNode
                     _invalidated.OnNext(Unit.Default);
                 });
         }
+
+        _isActive = true;
 
         // Re-subscribe to current child's invalidation events (might have been disposed)
         SubscribeToChildInvalidation(_currentChild);

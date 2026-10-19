@@ -14,6 +14,7 @@ public sealed class PanelNode : LayoutNode, IInvalidatingNode
 {
     private ILayoutNode _content = new EmptyNode();
     private IDisposable? _contentInvalidationSubscription;
+    private bool _isActive;
     private readonly Subject<Unit> _invalidated = new();
 
     /// <inheritdoc />
@@ -102,7 +103,7 @@ public sealed class PanelNode : LayoutNode, IInvalidatingNode
     }
 
     /// <summary>
-    /// Set the content of the panel.
+    /// Set the content of the panel. An active panel activates the new content at once.
     /// </summary>
     public PanelNode WithContent(ILayoutNode content)
     {
@@ -115,6 +116,7 @@ public sealed class PanelNode : LayoutNode, IInvalidatingNode
 
         // Set new content
         _content = content;
+        ApplyRuntimeContextToChild(content);
 
         // Subscribe to new content's invalidation events
         if (content is IInvalidatingNode invalidating)
@@ -122,6 +124,9 @@ public sealed class PanelNode : LayoutNode, IInvalidatingNode
             _contentInvalidationSubscription = invalidating.Invalidated
                 .Subscribe(_ => _invalidated.OnNext(Unit.Default));
         }
+
+        if (_isActive && content is IActivatableNode newContent)
+            newContent.OnActivate();
 
         return this;
     }
@@ -276,6 +281,7 @@ public sealed class PanelNode : LayoutNode, IInvalidatingNode
     /// <inheritdoc />
     public override void OnActivate()
     {
+        _isActive = true;
         if (_content is IActivatableNode contentNode)
         {
             contentNode.OnActivate();
@@ -286,6 +292,7 @@ public sealed class PanelNode : LayoutNode, IInvalidatingNode
     /// <inheritdoc />
     public override void OnDeactivate()
     {
+        _isActive = false;
         if (_content is IActivatableNode contentNode)
         {
             contentNode.OnDeactivate();

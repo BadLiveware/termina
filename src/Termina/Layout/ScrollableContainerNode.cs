@@ -43,6 +43,7 @@ public sealed class ScrollableContainerNode : LayoutNode, IInvalidatingNode, ISc
     private ScreenBounds _lastRenderedBounds = ScreenBounds.Empty;
     private readonly Subject<Unit> _invalidated = new();
     private IDisposable? _contentSubscription;
+    private bool _isActive;
 
     /// <inheritdoc />
     public Observable<Unit> Invalidated => _invalidated;
@@ -100,7 +101,7 @@ public sealed class ScrollableContainerNode : LayoutNode, IInvalidatingNode, ISc
     ScreenBounds IPointerScrollable.LastRenderedBounds => _lastRenderedBounds;
 
     /// <summary>
-    /// Set the content to scroll.
+    /// Set the content to scroll. An active container activates the new content at once.
     /// </summary>
     public ScrollableContainerNode WithContent(ILayoutNode content)
     {
@@ -111,12 +112,16 @@ public sealed class ScrollableContainerNode : LayoutNode, IInvalidatingNode, ISc
         if (_content is IActivatableNode oldContent)
             oldContent.OnDeactivate();
         _content = content;
+        ApplyRuntimeContextToChild(content);
 
         // If content is invalidating, subscribe to the observable
         if (_content is IInvalidatingNode invalidating)
         {
             _contentSubscription = invalidating.Invalidated.Subscribe(_ => OnContentInvalidated());
         }
+
+        if (_isActive && content is IActivatableNode newContent)
+            newContent.OnActivate();
 
         return this;
     }
@@ -271,6 +276,24 @@ public sealed class ScrollableContainerNode : LayoutNode, IInvalidatingNode, ISc
     {
         _contentSubscription?.Dispose();
         _contentSubscription = null;
+    }
+
+    /// <inheritdoc />
+    public override void OnActivate()
+    {
+        _isActive = true;
+        if (_content is IActivatableNode contentNode)
+            contentNode.OnActivate();
+        base.OnActivate();
+    }
+
+    /// <inheritdoc />
+    public override void OnDeactivate()
+    {
+        _isActive = false;
+        if (_content is IActivatableNode contentNode)
+            contentNode.OnDeactivate();
+        base.OnDeactivate();
     }
 
     /// <inheritdoc />

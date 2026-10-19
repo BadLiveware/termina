@@ -184,6 +184,7 @@ public abstract class ContainerNode : LayoutNode, IContainerNode, IInvalidatingN
     private readonly List<IDisposable> _childInvalidationSubscriptions = new();
     private readonly Subject<Unit> _invalidated = new();
     private int _disposeState;
+    private bool _isActive;
 
     /// <inheritdoc />
     public Observable<Unit> Invalidated => _invalidated;
@@ -195,26 +196,24 @@ public abstract class ContainerNode : LayoutNode, IContainerNode, IInvalidatingN
     internal override IEnumerable<ILayoutNode> GetChildNodes() => _children;
 
     /// <summary>
-    /// Add a child node.
+    /// Add a child node. An active container activates the child at once.
     /// </summary>
     protected void AddChild(ILayoutNode child)
     {
         ApplyRuntimeContextToChild(child);
         _children.Add(child);
         SubscribeToChildInvalidation(child);
+        if (_isActive && child is IActivatableNode node)
+            node.OnActivate();
     }
 
     /// <summary>
-    /// Add multiple child nodes.
+    /// Add multiple child nodes. An active container activates the children at once.
     /// </summary>
     protected void AddChildren(IEnumerable<ILayoutNode> children)
     {
         foreach (var child in children)
-        {
-            ApplyRuntimeContextToChild(child);
-            _children.Add(child);
-            SubscribeToChildInvalidation(child);
-        }
+            AddChild(child);
     }
 
     /// <summary>
@@ -273,6 +272,7 @@ public abstract class ContainerNode : LayoutNode, IContainerNode, IInvalidatingN
     /// </summary>
     public override void OnActivate()
     {
+        _isActive = true;
         foreach (var child in _children)
         {
             if (child is IActivatableNode node)
@@ -286,6 +286,7 @@ public abstract class ContainerNode : LayoutNode, IContainerNode, IInvalidatingN
     /// </summary>
     public override void OnDeactivate()
     {
+        _isActive = false;
         foreach (var child in _children)
         {
             if (child is IActivatableNode node)
