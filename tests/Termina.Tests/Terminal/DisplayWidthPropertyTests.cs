@@ -1,6 +1,7 @@
 // Copyright (c) Petabridge, LLC. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
 using CsCheck;
 using Termina.Terminal;
 
@@ -32,7 +33,7 @@ namespace Termina.Tests.Terminal;
 /// <para>
 /// THE GROUPS. A: cell decomposition. B: width composition. C: left truncation. D: slicing.
 /// E: index and column mapping. F: navigation and cursor safety. G: sanitization. H: width per
-/// character type. I: totality (no method throws).
+/// character type. I: totality (no method throws). J: span overloads.
 /// </para>
 /// </remarks>
 public class DisplayWidthPropertyTests
@@ -616,5 +617,82 @@ public class DisplayWidthPropertyTests
             _ = DisplayWidth.GetPreviousTextElementIndex(s, a);
             _ = DisplayWidth.GetNextTextElementIndex(s, a);
             _ = DisplayWidth.GetTextElementAt(s, a);
+        }, iter: Iter);
+
+    // ===== J. Span overloads =====
+    // The span overloads are the allocation-free core. The string overloads must give the same
+    // answers, and a span that is a slice of a larger string must give results relative to the
+    // slice, as if the slice were a string of its own.
+
+    // The cell palette plus the sequences that join or split in the grapheme rules: regional
+    // indicator pairs and a lone indicator, a ZWJ family, Hangul, fullwidth, stacked combining
+    // marks, CR LF, a tab, an escape sequence, and both lone surrogate halves.
+    private static readonly string[] SpanPalette =
+    [
+        .. CellPalette,
+        Cp(0x1F1F8, 0x1F1EA), Cp(0x1F1F8),
+        Cp(0x1F468, 0x200D, 0x1F469, 0x200D, 0x1F467),
+        "\uD55C\uAD6D", "\uFF46", Cp(0x65, 0x0301, 0x0302),
+        "\r\n", "\t", Esc + "[31m", "\uD83D", "\uDE00",
+    ];
+
+    private static readonly Gen<string> SpanText = Gen.OneOf(
+        AnyText,
+        Gen.OneOfConst(SpanPalette).List[0, 8].Select(parts => string.Concat(parts)));
+
+    // A text with random text before and after it. The span overloads see only the middle part.
+    private static readonly Gen<(string Whole, int Start, string Middle)> TextInsideText =
+        from prefix in SpanText
+        from middle in SpanText
+        from suffix in SpanText
+        select (prefix + middle + suffix, prefix.Length, middle);
+
+    private static List<DisplayCellRange> SpanCells(ReadOnlySpan<char> text)
+    {
+        var cells = new List<DisplayCellRange>();
+        foreach (var cell in DisplayWidth.EnumerateCells(text))
+            cells.Add(cell);
+        return cells;
+    }
+
+    private static List<DisplayCellRange> StringCells(string text) =>
+        DisplayWidth.EnumerateCells(text)
+            .Select(cell => new DisplayCellRange(cell.StartIndex, cell.Length, cell.ColumnWidth))
+            .ToList();
+
+    [Fact]
+    public void J1_SpanCells_MatchStringCellsAndTextElements() =>
+        // The span enumerator reports the same start, length, and columns as the string enumerator.
+        // Its cell starts are also the text element starts of StringInfo, which is independent of the
+        // DisplayWidth scan.
+        SpanText.Sample(s =>
+        {
+            var cells = SpanCells(s.AsSpan());
+            Assert.Equal(StringCells(s), cells);
+            Assert.Equal(StringInfo.ParseCombiningCharacters(s), cells.Select(c => c.StartIndex));
+        }, iter: Iter);
+
+    [Fact]
+    public void J2_SliceCells_AreRelativeToTheSlice() =>
+        // A slice that starts after index 0 reports start indexes from the slice start, and the text
+        // around the slice does not change where a cell starts or ends.
+        TextInsideText.Sample(t =>
+        {
+            var (whole, start, middle) = t;
+            Assert.Equal(StringCells(middle), SpanCells(whole.AsSpan(start, middle.Length)));
+        }, iter: Iter);
+
+    [Fact]
+    public void J3_SpanMeasures_MatchStringMeasures() =>
+        // GetColumnCount and GetStringIndexForColumnCount of a slice agree with the string overloads
+        // on the same text, for every column limit, including zero, negative, and int.MaxValue.
+        (from t in TextInsideText from n in WidthArg select (t.Whole, t.Start, t.Middle, n)).Sample(t =>
+        {
+            var (whole, start, middle, n) = t;
+            var slice = whole.AsSpan(start, middle.Length);
+            Assert.Equal(DisplayWidth.GetColumnCount(middle), DisplayWidth.GetColumnCount(slice));
+            Assert.Equal(
+                DisplayWidth.GetStringIndexForColumnCount(middle, n),
+                DisplayWidth.GetStringIndexForColumnCount(slice, n));
         }, iter: Iter);
 }
