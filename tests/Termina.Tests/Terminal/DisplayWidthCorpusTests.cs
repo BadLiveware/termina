@@ -19,7 +19,7 @@ namespace Termina.Tests.Terminal;
 /// </remarks>
 public class DisplayWidthCorpusTests
 {
-    private static readonly string[] Corpus =
+    internal static readonly string[] Corpus =
     [
         "",
         "hello",
@@ -125,7 +125,7 @@ public class DisplayWidthCorpusTests
         return string.Join(" | ", cells);
     }
 
-    private static string Escape(string text)
+    internal static string Escape(string text)
     {
         var builder = new StringBuilder(text.Length + 2);
         builder.Append('"');

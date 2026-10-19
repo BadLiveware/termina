@@ -1,0 +1,848 @@
+﻿scenario: write ""
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 ""
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write ""
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 ""
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "hello"
+  frame 1:
+    clear-screen
+    move 0,0 write "h" write "e" write "l" write "l" write "o" write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "hello"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "h" write "e" write "l"
+    move 0,1 write "l" write "o" write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "hello"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "h" write "e" write "l" write "l" write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "hello"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "e" write "l" write "l" write "o" write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "Hi, {you} ~ 42!"
+  frame 1:
+    clear-screen
+    move 0,0 write "H" write "i" write "," write " " write "{" write "y" write "o" write "u"
+    move 0,1 write "}" write " " write "~" write " " write "4" write "2" write "!" write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "Hi, {you} ~ 42!"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "H" write "i" write ","
+    move 0,1 write " " write "{" write "y" write "o" write "u" write "}" write " " write "~"
+    move 0,2 write " " write "4" write "2" write "!" write " " write " " write " " write " " reset flush
+
+scenario: region write "Hi, {you} ~ 42!"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "H" write "i" write "," write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "Hi, {you} ~ 42!"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "i" write "," write " " write "{" write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "\u65E5\u672C\u8A9E"
+  frame 1:
+    clear-screen
+    move 0,0 write "\u65E5" write "\u672C" write "\u8A9E" write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "\u65E5\u672C\u8A9E"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "\u65E5" write " "
+    move 0,1 write "\u672C" write "\u8A9E" write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "\u65E5\u672C\u8A9E"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "\u65E5" write "\u672C" write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "\u65E5\u672C\u8A9E"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "\u672C" write "\u8A9E" write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "a\u65E5b"
+  frame 1:
+    clear-screen
+    move 0,0 write "a" write "\u65E5" write "b" write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "a\u65E5b"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "a" write "\u65E5"
+    move 0,1 write "b" write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "a\u65E5b"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "a" write "\u65E5" write "b" write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "a\u65E5b"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "\u65E5" write "b" write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "\uD55C\uAD6D\uC5B4"
+  frame 1:
+    clear-screen
+    move 0,0 write "\uD55C" write "\uAD6D" write "\uC5B4" write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "\uD55C\uAD6D\uC5B4"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "\uD55C" write " "
+    move 0,1 write "\uAD6D" write "\uC5B4" write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "\uD55C\uAD6D\uC5B4"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "\uD55C" write "\uAD6D" write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "\uD55C\uAD6D\uC5B4"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "\uAD6D" write "\uC5B4" write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "\uFF46\uFF55\uFF4C\uFF4C"
+  frame 1:
+    clear-screen
+    move 0,0 write "\uFF46" write "\uFF55" write "\uFF4C" write "\uFF4C"
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "\uFF46\uFF55\uFF4C\uFF4C"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "\uFF46" write " "
+    move 0,1 write "\uFF55" write "\uFF4C" write "\uFF4C" write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "\uFF46\uFF55\uFF4C\uFF4C"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "\uFF46" write "\uFF55" write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "\uFF46\uFF55\uFF4C\uFF4C"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "\uFF55" write "\uFF4C" write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "\uD83C\uDF89"
+  frame 1:
+    clear-screen
+    move 0,0 write "\uD83C\uDF89" write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "\uD83C\uDF89"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "\uD83C\uDF89" write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "\uD83C\uDF89"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "\uD83C\uDF89" write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "\uD83C\uDF89"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67"
+  frame 1:
+    clear-screen
+    move 0,0 write "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67" write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67" write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67" write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "\uD83C\uDDF8\uD83C\uDDEA"
+  frame 1:
+    clear-screen
+    move 0,0 write "\uD83C\uDDF8\uD83C\uDDEA" write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "\uD83C\uDDF8\uD83C\uDDEA"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "\uD83C\uDDF8\uD83C\uDDEA" write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "\uD83C\uDDF8\uD83C\uDDEA"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "\uD83C\uDDF8\uD83C\uDDEA" write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "\uD83C\uDDF8\uD83C\uDDEA"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "\u26A1\uFE0F"
+  frame 1:
+    clear-screen
+    move 0,0 write "\u26A1\uFE0F" write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "\u26A1\uFE0F"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "\u26A1\uFE0F" write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "\u26A1\uFE0F"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "\u26A1\uFE0F" write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "\u26A1\uFE0F"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "1\uFE0F\u20E3"
+  frame 1:
+    clear-screen
+    move 0,0 write "1\uFE0F\u20E3" write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "1\uFE0F\u20E3"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "1\uFE0F\u20E3" write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "1\uFE0F\u20E3"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "1\uFE0F\u20E3" write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "1\uFE0F\u20E3"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "e\u0301"
+  frame 1:
+    clear-screen
+    move 0,0 write "e\u0301" write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "e\u0301"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "e\u0301" write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "e\u0301"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "e\u0301" write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "e\u0301"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "\u0301abc"
+  frame 1:
+    clear-screen
+    move 0,0 write "a" write "b" write "c" write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "\u0301abc"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "a" write "b" write "c"
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "\u0301abc"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "a" write "b" write "c" write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "\u0301abc"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "b" write "c" write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "abc\u0301"
+  frame 1:
+    clear-screen
+    move 0,0 write "a" write "b" write "c\u0301" write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "abc\u0301"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "a" write "b" write "c\u0301"
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "abc\u0301"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "a" write "b" write "c\u0301" write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "abc\u0301"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "b" write "c\u0301" write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "\u001B[31mred\u001B[0m"
+  frame 1:
+    clear-screen
+    move 0,0 write "[" write "3" write "1" write "m" write "r" write "e" write "d" write "["
+    move 0,1 write "0" write "m" write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "\u001B[31mred\u001B[0m"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "[" write "3" write "1"
+    move 0,1 write "m" write "r" write "e" write "d" write "[" write "0" write "m" write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "\u001B[31mred\u001B[0m"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "r" write "e" write "d" write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "\u001B[31mred\u001B[0m"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "e" write "d" write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "\u001B]0;title\u0007ok"
+  frame 1:
+    clear-screen
+    move 0,0 write "]" write "0" write ";" write "t" write "i" write "t" write "l" write "e"
+    move 0,1 write "o" write "k" write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "\u001B]0;title\u0007ok"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "]" write "0" write ";"
+    move 0,1 write "t" write "i" write "t" write "l" write "e" write "o" write "k" write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "\u001B]0;title\u0007ok"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "o" write "k" write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "\u001B]0;title\u0007ok"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "k" write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "\uD83D"
+  frame 1:
+    clear-screen
+    move 0,0 write "\uD83D" write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "\uD83D"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "\uD83D" write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "\uD83D"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "\uD83D" write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "\uD83D"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "\uDE00"
+  frame 1:
+    clear-screen
+    move 0,0 write "\uDE00" write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "\uDE00"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "\uDE00" write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "\uDE00"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "\uDE00" write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "\uDE00"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "\uD835\uDD4Fy"
+  frame 1:
+    clear-screen
+    move 0,0 write "\uD835\uDD4F" write "y" write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "\uD835\uDD4Fy"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "\uD835\uDD4F" write "y" write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "\uD835\uDD4Fy"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "\uD835\uDD4F" write "y" write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "\uD835\uDD4Fy"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "y" write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "tab\u0009here"
+  frame 1:
+    clear-screen
+    move 0,0 write "t" write "a" write "b" write " " write " " write " " write " " write "h"
+    move 0,1 write "e" write "r" write "e" write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "tab\u0009here"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "t" write "a" write "b"
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write "h"
+    move 0,2 write "e" write "r" write "e" write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "tab\u0009here"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "t" write "a" write "b" write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "tab\u0009here"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "a" write "b" write " " write "h" write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "line\u000Abreak"
+  frame 1:
+    clear-screen
+    move 0,0 write "l" write "i" write "n" write "e" write " " write " " write " " write " "
+    move 0,1 write "b" write "r" write "e" write "a" write "k" write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "line\u000Abreak"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "l" write "i" write "n"
+    move 0,1 write "e" write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write "b" write "r" write "e" write "a" write "k" write " " write " " write " " reset flush
+
+scenario: region write "line\u000Abreak"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "l" write "i" write "n" write "e" write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "line\u000Abreak"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "i" write "n" write "e" write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "a\u000D\u000Ab"
+  frame 1:
+    clear-screen
+    move 0,0 write "a" write "b" write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "a\u000D\u000Ab"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "a" write "b" write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "a\u000D\u000Ab"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "a" write " " write " " write "b" write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "a\u000D\u000Ab"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write "b" write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "e\u0301\u0302"
+  frame 1:
+    clear-screen
+    move 0,0 write "e\u0301\u0302" write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "e\u0301\u0302"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "e\u0301\u0302" write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write "e\u0301\u0302"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "e\u0301\u0302" write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "e\u0301\u0302"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write "mixed \u65E5\u672C \uD83C\uDF89 text"
+  frame 1:
+    clear-screen
+    move 0,0 write "m" write "i" write "x" write "e" write "d" write " " write "\u65E5"
+    move 0,1 write "\u672C" write " " write "\uD83C\uDF89" write " " write "t" write "e"
+    move 0,2 write "x" write "t" write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write at column 5 "mixed \u65E5\u672C \uD83C\uDF89 text"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "m" write "i" write "x"
+    move 0,1 write "e" write "d" write " " write "\u65E5" write "\u672C" write " "
+    move 0,2 write "\uD83C\uDF89" write " " write "t" write "e" write "x" write "t" write " " reset flush
+
+scenario: region write "mixed \u65E5\u672C \uD83C\uDF89 text"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "m" write "i" write "x" write "e" write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: region write from column -1 "mixed \u65E5\u672C \uD83C\uDF89 text"
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "i" write "x" write "e" write "d" write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: wide char at the last column
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write "\u65E5" write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: wide char that ends at the last column
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write "\u65E5"
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: emoji at the last column
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write "\uD83C\uDF89" write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: wide char at the last column of the last row
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: text past the end of the last row
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write "a" write "b" write "c" write "d" write "e" write "f" write "\u65E5" reset flush
+
+scenario: tab near the last column
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write "X"
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: wide char at the last region column
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: wide char that ends at the last region column
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write "\u65E5" write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: wide text cut by the region end
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write " " write "\u65E5" write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: wide char cut by the region start
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "\u672C" write "a" write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: emoji cut by the region start
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "a" write "b" write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: write over the left half of a wide char
+  frame 1:
+    clear-screen
+    move 0,0 write "\u65E5" write "\u672C" write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+  frame 2:
+    move 0,0 write "x"
+    move 1,0 write " " reset flush
+
+scenario: write over the right half of a wide char
+  frame 1:
+    clear-screen
+    move 0,0 write "\u65E5" write "\u672C" write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+  frame 2:
+    move 0,0 write " "
+    move 1,0 write "x" reset flush
+
+scenario: wide write over the right half of a wide char
+  frame 1:
+    clear-screen
+    move 0,0 write "\u65E5" write "\u672C" write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+  frame 2:
+    move 0,0 write " "
+    move 1,0 write "\u4E2D" reset flush
+
+scenario: char write over the right half of a wide char
+  frame 1:
+    clear-screen
+    move 0,0 write "\u65E5" write "\u672C" write " " write " " write " " write " "
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+  frame 2:
+    move 0,0 write " "
+    move 1,0 write "x" reset flush
+
+scenario: region write over the right half of a wide char
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "\u65E5" write "\u672C" write " " write " " write " "
+    move 0,2 write " " write " " write " " write " " write " " write " " write " " write " " reset flush
+  frame 2:
+    move 1,1 write " "
+    move 2,1 write "x" reset flush
+
+scenario: char writes
+  frame 1:
+    clear-screen
+    move 0,0 write "a" write "\u65E5" write " " write " " write " " write " " write "\uD83D"
+    move 0,1 write "c" write "\uD83D" write "b" write " " write " " write " " write " " write " "
+    move 0,2 write "d" write " " write " " write " " write " " write " " write " " write " " reset flush
+
+scenario: char writes at column 5
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write "a" write "\u65E5"
+    move 0,1 write " " write " " write " " write " " write " " write " " write " " write "\uD83D"
+    move 0,2 write "c" write "\uD83D" write "b" write " " write " " write " " write " " write " " reset flush
+
+scenario: region char writes
+  frame 1:
+    clear-screen
+    move 0,0 write " " write " " write " " write " " write " " write " " write " " write " "
+    move 0,1 write " " write "x" write "\u65E5" write " " write " " write " " write " "
+    move 0,2 write " " write " " write "\uD83D" write " " write "z" write " " write " " write " " reset flush
+

@@ -1,0 +1,734 @@
+﻿scenario: write ""
+  frame 1: cursor 0,0
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 ""
+  frame 1: cursor 5,0
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write ""
+  frame 1: cursor 0,0
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 ""
+  frame 1: cursor 0,0
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "hello"
+  frame 1: cursor 5,0
+    row 0: "h" "e" "l" "l" "o" " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "hello"
+  frame 1: cursor 2,1
+    row 0: " " " " " " " " " " "h" "e" "l"
+    row 1: "l" "o" " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "hello"
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "h" "e" "l" "l" " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "hello"
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "e" "l" "l" "o" " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "Hi, {you} ~ 42!"
+  frame 1: cursor 7,1
+    row 0: "H" "i" "," " " "{" "y" "o" "u"
+    row 1: "}" " " "~" " " "4" "2" "!" " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "Hi, {you} ~ 42!"
+  frame 1: cursor 4,2
+    row 0: " " " " " " " " " " "H" "i" ","
+    row 1: " " "{" "y" "o" "u" "}" " " "~"
+    row 2: " " "4" "2" "!" " " " " " " " "
+
+scenario: region write "Hi, {you} ~ 42!"
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "H" "i" "," " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "Hi, {you} ~ 42!"
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "i" "," " " "{" " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "\u65E5\u672C\u8A9E"
+  frame 1: cursor 6,0
+    row 0: "\u65E5" ~ "\u672C" ~ "\u8A9E" ~ " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "\u65E5\u672C\u8A9E"
+  frame 1: cursor 4,1
+    row 0: " " " " " " " " " " "\u65E5" ~ " "
+    row 1: "\u672C" ~ "\u8A9E" ~ " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "\u65E5\u672C\u8A9E"
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "\u65E5" ~ "\u672C" ~ " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "\u65E5\u672C\u8A9E"
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "\u672C" ~ "\u8A9E" ~ " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "a\u65E5b"
+  frame 1: cursor 4,0
+    row 0: "a" "\u65E5" ~ "b" " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "a\u65E5b"
+  frame 1: cursor 1,1
+    row 0: " " " " " " " " " " "a" "\u65E5" ~
+    row 1: "b" " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "a\u65E5b"
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "a" "\u65E5" ~ "b" " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "a\u65E5b"
+  frame 1: cursor 4,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "\u65E5" ~ "b" " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "\uD55C\uAD6D\uC5B4"
+  frame 1: cursor 6,0
+    row 0: "\uD55C" ~ "\uAD6D" ~ "\uC5B4" ~ " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "\uD55C\uAD6D\uC5B4"
+  frame 1: cursor 4,1
+    row 0: " " " " " " " " " " "\uD55C" ~ " "
+    row 1: "\uAD6D" ~ "\uC5B4" ~ " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "\uD55C\uAD6D\uC5B4"
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "\uD55C" ~ "\uAD6D" ~ " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "\uD55C\uAD6D\uC5B4"
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "\uAD6D" ~ "\uC5B4" ~ " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "\uFF46\uFF55\uFF4C\uFF4C"
+  frame 1: cursor 0,1
+    row 0: "\uFF46" ~ "\uFF55" ~ "\uFF4C" ~ "\uFF4C" ~
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "\uFF46\uFF55\uFF4C\uFF4C"
+  frame 1: cursor 6,1
+    row 0: " " " " " " " " " " "\uFF46" ~ " "
+    row 1: "\uFF55" ~ "\uFF4C" ~ "\uFF4C" ~ " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "\uFF46\uFF55\uFF4C\uFF4C"
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "\uFF46" ~ "\uFF55" ~ " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "\uFF46\uFF55\uFF4C\uFF4C"
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "\uFF55" ~ "\uFF4C" ~ " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "\uD83C\uDF89"
+  frame 1: cursor 2,0
+    row 0: "\uD83C\uDF89" ~ " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "\uD83C\uDF89"
+  frame 1: cursor 7,0
+    row 0: " " " " " " " " " " "\uD83C\uDF89" ~ " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "\uD83C\uDF89"
+  frame 1: cursor 3,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "\uD83C\uDF89" ~ " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "\uD83C\uDF89"
+  frame 1: cursor 0,0
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67"
+  frame 1: cursor 2,0
+    row 0: "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67" ~ " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67"
+  frame 1: cursor 7,0
+    row 0: " " " " " " " " " " "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67" ~ " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67"
+  frame 1: cursor 3,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67" ~ " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67"
+  frame 1: cursor 0,0
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "\uD83C\uDDF8\uD83C\uDDEA"
+  frame 1: cursor 2,0
+    row 0: "\uD83C\uDDF8\uD83C\uDDEA" ~ " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "\uD83C\uDDF8\uD83C\uDDEA"
+  frame 1: cursor 7,0
+    row 0: " " " " " " " " " " "\uD83C\uDDF8\uD83C\uDDEA" ~ " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "\uD83C\uDDF8\uD83C\uDDEA"
+  frame 1: cursor 3,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "\uD83C\uDDF8\uD83C\uDDEA" ~ " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "\uD83C\uDDF8\uD83C\uDDEA"
+  frame 1: cursor 0,0
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "\u26A1\uFE0F"
+  frame 1: cursor 2,0
+    row 0: "\u26A1\uFE0F" ~ " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "\u26A1\uFE0F"
+  frame 1: cursor 7,0
+    row 0: " " " " " " " " " " "\u26A1\uFE0F" ~ " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "\u26A1\uFE0F"
+  frame 1: cursor 3,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "\u26A1\uFE0F" ~ " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "\u26A1\uFE0F"
+  frame 1: cursor 0,0
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "1\uFE0F\u20E3"
+  frame 1: cursor 2,0
+    row 0: "1\uFE0F\u20E3" ~ " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "1\uFE0F\u20E3"
+  frame 1: cursor 7,0
+    row 0: " " " " " " " " " " "1\uFE0F\u20E3" ~ " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "1\uFE0F\u20E3"
+  frame 1: cursor 3,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "1\uFE0F\u20E3" ~ " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "1\uFE0F\u20E3"
+  frame 1: cursor 0,0
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "e\u0301"
+  frame 1: cursor 1,0
+    row 0: "e\u0301" " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "e\u0301"
+  frame 1: cursor 6,0
+    row 0: " " " " " " " " " " "e\u0301" " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "e\u0301"
+  frame 1: cursor 2,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "e\u0301" " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "e\u0301"
+  frame 1: cursor 0,0
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "\u0301abc"
+  frame 1: cursor 3,0
+    row 0: "a" "b" "c" " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "\u0301abc"
+  frame 1: cursor 0,1
+    row 0: " " " " " " " " " " "a" "b" "c"
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "\u0301abc"
+  frame 1: cursor 4,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "a" "b" "c" " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "\u0301abc"
+  frame 1: cursor 3,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "b" "c" " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "abc\u0301"
+  frame 1: cursor 3,0
+    row 0: "a" "b" "c\u0301" " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "abc\u0301"
+  frame 1: cursor 0,1
+    row 0: " " " " " " " " " " "a" "b" "c\u0301"
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "abc\u0301"
+  frame 1: cursor 4,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "a" "b" "c\u0301" " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "abc\u0301"
+  frame 1: cursor 3,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "b" "c\u0301" " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "\u001B[31mred\u001B[0m"
+  frame 1: cursor 0,0
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "\u001B[31mred\u001B[0m"
+  frame 1: cursor 5,0
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "\u001B[31mred\u001B[0m"
+  frame 1: cursor 4,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "r" "e" "d" " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "\u001B[31mred\u001B[0m"
+  frame 1: cursor 3,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "e" "d" " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "\u001B]0;title\u0007ok"
+  frame 1: cursor 0,0
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "\u001B]0;title\u0007ok"
+  frame 1: cursor 5,0
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "\u001B]0;title\u0007ok"
+  frame 1: cursor 3,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "o" "k" " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "\u001B]0;title\u0007ok"
+  frame 1: cursor 2,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "k" " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "\uD83D"
+  frame 1: cursor 1,0
+    row 0: "\uD83D" " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "\uD83D"
+  frame 1: cursor 6,0
+    row 0: " " " " " " " " " " "\uD83D" " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "\uD83D"
+  frame 1: cursor 2,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "\uD83D" " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "\uD83D"
+  frame 1: cursor 0,0
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "\uDE00"
+  frame 1: cursor 1,0
+    row 0: "\uDE00" " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "\uDE00"
+  frame 1: cursor 6,0
+    row 0: " " " " " " " " " " "\uDE00" " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "\uDE00"
+  frame 1: cursor 2,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "\uDE00" " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "\uDE00"
+  frame 1: cursor 0,0
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "\uD835\uDD4Fy"
+  frame 1: cursor 2,0
+    row 0: "\uD835\uDD4F" "y" " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "\uD835\uDD4Fy"
+  frame 1: cursor 7,0
+    row 0: " " " " " " " " " " "\uD835\uDD4F" "y" " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "\uD835\uDD4Fy"
+  frame 1: cursor 3,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "\uD835\uDD4F" "y" " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "\uD835\uDD4Fy"
+  frame 1: cursor 2,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "y" " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "tab\u0009here"
+  frame 1: cursor 3,1
+    row 0: "t" "a" "b" " " " " " " " " "h"
+    row 1: "e" "r" "e" " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "tab\u0009here"
+  frame 1: cursor 3,2
+    row 0: " " " " " " " " " " "t" "a" "b"
+    row 1: " " " " " " " " " " " " " " "h"
+    row 2: "e" "r" "e" " " " " " " " " " "
+
+scenario: region write "tab\u0009here"
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "t" "a" "b" " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "tab\u0009here"
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "a" "b" " " "h" " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "line\u000Abreak"
+  frame 1: cursor 5,1
+    row 0: "l" "i" "n" "e" " " " " " " " "
+    row 1: "b" "r" "e" "a" "k" " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "line\u000Abreak"
+  frame 1: cursor 5,2
+    row 0: " " " " " " " " " " "l" "i" "n"
+    row 1: "e" " " " " " " " " " " " " " "
+    row 2: "b" "r" "e" "a" "k" " " " " " "
+
+scenario: region write "line\u000Abreak"
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "l" "i" "n" "e" " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "line\u000Abreak"
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "i" "n" "e" " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "a\u000D\u000Ab"
+  frame 1: cursor 2,0
+    row 0: "a" "b" " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "a\u000D\u000Ab"
+  frame 1: cursor 7,0
+    row 0: " " " " " " " " " " "a" "b" " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "a\u000D\u000Ab"
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "a" " " " " "b" " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "a\u000D\u000Ab"
+  frame 1: cursor 4,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " "b" " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "e\u0301\u0302"
+  frame 1: cursor 1,0
+    row 0: "e\u0301\u0302" " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write at column 5 "e\u0301\u0302"
+  frame 1: cursor 6,0
+    row 0: " " " " " " " " " " "e\u0301\u0302" " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write "e\u0301\u0302"
+  frame 1: cursor 2,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "e\u0301\u0302" " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "e\u0301\u0302"
+  frame 1: cursor 0,0
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write "mixed \u65E5\u672C \uD83C\uDF89 text"
+  frame 1: cursor 2,2
+    row 0: "m" "i" "x" "e" "d" " " "\u65E5" ~
+    row 1: "\u672C" ~ " " "\uD83C\uDF89" ~ " " "t" "e"
+    row 2: "x" "t" " " " " " " " " " " " "
+
+scenario: write at column 5 "mixed \u65E5\u672C \uD83C\uDF89 text"
+  frame 1: cursor 7,2
+    row 0: " " " " " " " " " " "m" "i" "x"
+    row 1: "e" "d" " " "\u65E5" ~ "\u672C" ~ " "
+    row 2: "\uD83C\uDF89" ~ " " "t" "e" "x" "t" " "
+
+scenario: region write "mixed \u65E5\u672C \uD83C\uDF89 text"
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "m" "i" "x" "e" " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write from column -1 "mixed \u65E5\u672C \uD83C\uDF89 text"
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "i" "x" "e" "d" " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: wide char at the last column
+  frame 1: cursor 2,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: "\u65E5" ~ " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: wide char that ends at the last column
+  frame 1: cursor 0,1
+    row 0: " " " " " " " " " " " " "\u65E5" ~
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: emoji at the last column
+  frame 1: cursor 2,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: "\uD83C\uDF89" ~ " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: wide char at the last column of the last row
+  frame 1: cursor 0,2
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: text past the end of the last row
+  frame 1: cursor 4,2
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: "\u672C" ~ "g" "h" "e" "f" "\u65E5" ~
+
+scenario: tab near the last column
+  frame 1: cursor 0,1
+    row 0: " " " " " " " " " " " " " " "X"
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: wide char at the last region column
+  frame 1: cursor 0,0
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: wide char that ends at the last region column
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " " " "\u65E5" ~ " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: wide text cut by the region end
+  frame 1: cursor 4,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " "\u65E5" ~ " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: wide char cut by the region start
+  frame 1: cursor 4,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "\u672C" ~ "a" " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: emoji cut by the region start
+  frame 1: cursor 3,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "a" "b" " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write over the left half of a wide char
+  frame 1: cursor 4,0
+    row 0: "\u65E5" ~ "\u672C" ~ " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+  frame 2: cursor 1,0
+    row 0: "x" " " "\u672C" ~ " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: write over the right half of a wide char
+  frame 1: cursor 4,0
+    row 0: "\u65E5" ~ "\u672C" ~ " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+  frame 2: cursor 2,0
+    row 0: " " "x" "\u672C" ~ " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: wide write over the right half of a wide char
+  frame 1: cursor 4,0
+    row 0: "\u65E5" ~ "\u672C" ~ " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+  frame 2: cursor 3,0
+    row 0: " " "\u4E2D" ~ ~ " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: char write over the right half of a wide char
+  frame 1: cursor 4,0
+    row 0: "\u65E5" ~ "\u672C" ~ " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+  frame 2: cursor 2,0
+    row 0: " " "x" "\u672C" ~ " " " " " " " "
+    row 1: " " " " " " " " " " " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: region write over the right half of a wide char
+  frame 1: cursor 5,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "\u65E5" ~ "\u672C" ~ " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+  frame 2: cursor 3,1
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " " " "x" "\u672C" ~ " " " " " "
+    row 2: " " " " " " " " " " " " " " " "
+
+scenario: char writes
+  frame 1: cursor 1,2
+    row 0: "a" "\u65E5" ~ " " " " " " " " "\uD83D"
+    row 1: "c" "\uD83D" "b" " " " " " " " " " "
+    row 2: "d" " " " " " " " " " " " " " "
+
+scenario: char writes at column 5
+  frame 1: cursor 1,2
+    row 0: " " " " " " " " " " " " " " "\uD83D"
+    row 1: "c" "\uD83D" "b" " " " " " " " " " "
+    row 2: "d" " " " " " " " " " " " " " "
+
+scenario: region char writes
+  frame 1: cursor 5,2
+    row 0: " " " " " " " " " " " " " " " "
+    row 1: " " "x" "\u65E5" ~ " " " " " " " "
+    row 2: " " " " "\uD83D" " " "z" " " " " " "
+
