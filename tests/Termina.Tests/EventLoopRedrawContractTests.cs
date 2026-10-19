@@ -8,6 +8,7 @@ using Termina.Layout;
 using Termina.Reactive;
 using Termina.Rendering;
 using Termina.Terminal;
+using Termina.Tests.Utility;
 
 namespace Termina.Tests;
 
@@ -18,8 +19,6 @@ namespace Termina.Tests;
 /// </summary>
 public class EventLoopRedrawContractTests
 {
-    private static readonly TimeSpan Guard = TimeSpan.FromSeconds(5);
-
     [Fact]
     public void RedrawRequested_written_to_the_channel_causes_a_render()
     {
@@ -38,26 +37,27 @@ public class EventLoopRedrawContractTests
     public async Task RunAsync_renders_for_a_RedrawRequested_that_an_input_source_writes()
     {
         var (app, page) = CreateApp();
-        var source = new RedrawSource(page);
-        app.AddInputSource(source);
+        // The source changes the page state and writes the event. It never calls RequestRedraw. The
+        // loop thread stops the loop when it draws the changed state. The test cancels a token and
+        // does not call Shutdown, because Shutdown has no effect before RunAsync creates its own
+        // cancellation source.
+        using var stop = new CancellationTokenSource();
+        app.AddInputSource(new RedrawSource(page, stop.Cancel));
 
-        var run = Task.Run(() => app.RunAsync());
+        var run = Task.Run(() => app.RunAsync(stop.Token));
         try
         {
-            // The source changes the page state and writes the event. It never calls RequestRedraw.
-            await source.Rendered.Task.WaitAsync(Guard);
+            await run.WaitAsync(TestTimeouts.Hang);
         }
         catch (TimeoutException)
         {
+            stop.Cancel();
+            await run.WaitAsync(TestTimeouts.Hang);
             Assert.Fail("The loop did not render after an input source wrote RedrawRequested.");
         }
-        finally
-        {
-            app.Shutdown();
-            await run.WaitAsync(Guard);
-        }
 
-        Assert.Equal("changed", page.Probe.LastRendered);
+        // The initial render and one render for the event.
+        Assert.Equal(2, page.Probe.Renders);
     }
 
     private static (TerminaApplication App, RedrawPage Page) CreateApp()
@@ -94,11 +94,8 @@ public class EventLoopRedrawContractTests
         }
     }
 
-    private sealed class RedrawSource(RedrawPage page) : IInputSource
+    private sealed class RedrawSource(RedrawPage page, Action stopLoop) : IInputSource
     {
-        public TaskCompletionSource Rendered { get; } =
-            new(TaskCreationOptions.RunContinuationsAsynchronously);
-
         public async Task RunAsync(ChannelWriter<object> writer, CancellationToken cancellationToken)
         {
             // Wait for the first render, so that the redraw flag is clear when the event arrives.
@@ -106,7 +103,7 @@ public class EventLoopRedrawContractTests
             page.Probe.OnRendered = text =>
             {
                 if (text == "changed")
-                    Rendered.TrySetResult();
+                    stopLoop();
             };
             page.Status = "changed";
             writer.TryWrite(RedrawRequested.Instance);

@@ -9,6 +9,7 @@ using Termina.Layout;
 using Termina.Reactive;
 using Termina.Rendering;
 using Termina.Terminal;
+using Termina.Tests.Utility;
 
 namespace Termina.Tests;
 
@@ -132,7 +133,7 @@ public class EventLoopBatchingTests
 
         // Run the loop on another thread, so a loop that never yields fails the wait and does not hang the test.
         var run = Task.Run(() => app.RunAsync());
-        await run.WaitAsync(TimeSpan.FromSeconds(30));
+        await run.WaitAsync(TestTimeouts.Hang);
 
         // One initial render and one render for the batch, not one render for each event.
         Assert.Equal(2, page.Probe.Renders);
@@ -154,7 +155,7 @@ public class EventLoopBatchingTests
 
         // Run the loop on another thread, so a loop that never yields fails the wait and does not hang the test.
         var run = Task.Run(() => app.RunAsync());
-        await run.WaitAsync(TimeSpan.FromSeconds(30));
+        await run.WaitAsync(TestTimeouts.Hang);
 
         Assert.Equal(2, page.Probe.Renders);
     }
@@ -165,7 +166,7 @@ public class EventLoopBatchingTests
         var (app, _) = CreateApp();
         app.AddInputSource(new IdleInputSource());
         app.Post(app.Shutdown);
-        await Task.Run(() => app.RunAsync()).WaitAsync(TimeSpan.FromSeconds(30));
+        await Task.Run(() => app.RunAsync()).WaitAsync(TestTimeouts.Hang);
 
         // No loop reads the queue now. The task must not wait for a loop that will not run again.
         var ran = false;

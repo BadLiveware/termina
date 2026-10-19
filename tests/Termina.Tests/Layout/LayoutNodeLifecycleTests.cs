@@ -4,6 +4,7 @@
 using R3;
 using Termina.Layout;
 using Termina.Rendering;
+using Termina.Tests.Utility;
 
 namespace Termina.Tests.Layout;
 
@@ -350,17 +351,17 @@ public class LayoutNodeLifecycleTests
         var container = Layouts.Vertical(child);
 
         var firstDispose = Task.Run(container.Dispose);
-        await child.DisposeStarted.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        await child.DisposeStarted.Task.WaitAsync(TestTimeouts.Hang);
 
         var secondDispose = Task.Run(container.Dispose);
         try
         {
-            await secondDispose.WaitAsync(TimeSpan.FromSeconds(10));
+            await secondDispose.WaitAsync(TestTimeouts.Hang);
         }
         finally
         {
             child.AllowDisposeToFinish.TrySetResult();
-            await firstDispose.WaitAsync(TimeSpan.FromSeconds(10));
+            await firstDispose.WaitAsync(TestTimeouts.Hang);
         }
 
         Assert.Equal(1, child.DisposeCount);

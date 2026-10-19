@@ -9,6 +9,7 @@ using Termina.Layout;
 using Termina.Reactive;
 using Termina.Rendering;
 using Termina.Terminal;
+using Termina.Tests.Utility;
 
 namespace Termina.Tests;
 
@@ -19,8 +20,6 @@ namespace Termina.Tests;
 /// </summary>
 public class EventLoopNavigationBatchingTests
 {
-    private static readonly TimeSpan Guard = TimeSpan.FromSeconds(5);
-
     [Fact]
     public async Task RunAsync_does_not_render_the_page_that_input_navigates_away_from()
     {
@@ -89,19 +88,22 @@ public class EventLoopNavigationBatchingTests
     private static async Task RunUntilWatchedPageRendersAsync(TerminaApplication app)
     {
         app.AddInputSource(new EnterSource());
-        var run = Task.Run(() => app.RunAsync());
+
+        // The loop thread stops the loop when it draws the watched page. The test cancels a token and
+        // does not call Shutdown, because Shutdown has no effect before RunAsync creates its own
+        // cancellation source.
+        using var stop = new CancellationTokenSource();
+        Scenario.WatchedRendered = stop.Cancel;
+        var run = Task.Run(() => app.RunAsync(stop.Token));
         try
         {
-            await Scenario.WatchedRendered.Task.WaitAsync(Guard);
+            await run.WaitAsync(TestTimeouts.Hang);
         }
         catch (TimeoutException)
         {
-            Assert.Fail("The destination page did not render.");
-        }
-        finally
-        {
-            app.Shutdown();
-            await run.WaitAsync(Guard);
+            stop.Cancel();
+            await run.WaitAsync(TestTimeouts.Hang);
+            Assert.Fail("The loop did not draw the destination page.");
         }
     }
 
@@ -121,7 +123,7 @@ public class EventLoopNavigationBatchingTests
         public static string NavTarget { get; private set; } = "";
         public static string Watched { get; private set; } = "";
         public static TaskCompletionSource StartRendered { get; private set; } = New();
-        public static TaskCompletionSource WatchedRendered { get; private set; } = New();
+        public static Action WatchedRendered { get; set; } = () => { };
 
         public static void Reset(string navTarget, string watched)
         {
@@ -129,7 +131,7 @@ public class EventLoopNavigationBatchingTests
             NavTarget = navTarget;
             Watched = watched;
             StartRendered = New();
-            WatchedRendered = New();
+            WatchedRendered = () => { };
         }
 
         private static TaskCompletionSource New() => new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -159,7 +161,7 @@ public class EventLoopNavigationBatchingTests
             if (name == "start")
                 Scenario.StartRendered.TrySetResult();
             if (name == Scenario.Watched)
-                Scenario.WatchedRendered.TrySetResult();
+                Scenario.WatchedRendered();
         }
 
         public void Dispose()

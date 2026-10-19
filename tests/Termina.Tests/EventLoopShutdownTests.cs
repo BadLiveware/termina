@@ -6,6 +6,7 @@ using Termina.Input;
 using Termina.Layout;
 using Termina.Reactive;
 using Termina.Terminal;
+using Termina.Tests.Utility;
 
 namespace Termina.Tests;
 
@@ -15,8 +16,6 @@ namespace Termina.Tests;
 /// </summary>
 public class EventLoopShutdownTests
 {
-    private static readonly TimeSpan Guard = TimeSpan.FromSeconds(5);
-
     [Fact]
     public async Task InvokeAsync_queued_behind_a_shutdown_does_not_hang()
     {
@@ -30,7 +29,7 @@ public class EventLoopShutdownTests
         app.Post(() => { });
         var invoked = app.InvokeAsync(() => { });
 
-        await Task.Run(() => app.RunAsync()).WaitAsync(Guard);
+        await Task.Run(() => app.RunAsync()).WaitAsync(TestTimeouts.Hang);
 
         // The loop has stopped, so nothing else can finish the task. The bounded wait turns a hang
         // into a failure.
@@ -50,7 +49,7 @@ public class EventLoopShutdownTests
         app.Post(app.Shutdown);
         var invoked = app.InvokeAsync(() => actionRan = true);
 
-        await Task.Run(() => app.RunAsync()).WaitAsync(Guard);
+        await Task.Run(() => app.RunAsync()).WaitAsync(TestTimeouts.Hang);
         await AssertSettledAsync(invoked);
 
         // The task may succeed only when the action ran. Otherwise it must be canceled or faulted.
@@ -62,7 +61,7 @@ public class EventLoopShutdownTests
     {
         try
         {
-            await task.WaitAsync(Guard);
+            await task.WaitAsync(TestTimeouts.Hang);
         }
         catch (TimeoutException)
         {
