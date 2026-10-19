@@ -247,7 +247,7 @@ public class EscapeSequenceParserTests
     [Fact]
     public void StandaloneEsc_IsBuffering_UntilTimeout()
     {
-        var parser = new EscapeSequenceParser();
+        var parser = new EscapeSequenceParser(() => 0L);
         parser.Process(EscKey());
 
         // Before timeout: buffering, CheckEscapeTimeout returns null

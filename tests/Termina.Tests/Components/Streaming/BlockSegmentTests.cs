@@ -1,6 +1,7 @@
 // Copyright (c) Petabridge, LLC. All rights reserved.
 // Licensed under the Apache 2.0 license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Extensions.Time.Testing;
 using R3;
 using Termina.Components.Streaming;
 using Termina.Terminal;
@@ -43,16 +44,16 @@ public class BlockSegmentTests
     }
 
     [Fact]
-    public async Task BlockSegment_PropagatesInvalidation_FromAnimatedInner()
+    public void BlockSegment_PropagatesInvalidation_FromAnimatedInner()
     {
-        var spinner = new SpinnerSegment(SpinnerStyle.Dots, intervalMs: 10);
+        var timeProvider = new FakeTimeProvider();
+        var spinner = new SpinnerSegment(SpinnerStyle.Dots, intervalMs: 10, timeProvider: timeProvider);
         var block = new BlockSegment(spinner);
 
         var invalidated = false;
         block.Invalidated.Subscribe(_ => invalidated = true);
 
-        // Wait for spinner animation
-        await spinner.Invalidated.FirstAsync().WaitAsync(TimeSpan.FromSeconds(1));
+        timeProvider.Advance(TimeSpan.FromMilliseconds(10));
 
         Assert.True(invalidated);
 

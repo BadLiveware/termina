@@ -1,6 +1,7 @@
 // Copyright (c) Petabridge, LLC. All rights reserved.
 // Licensed under the Apache 2.0 license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Extensions.Time.Testing;
 using R3;
 using Termina.Components.Streaming;
 using Termina.Layout;
@@ -665,21 +666,21 @@ public class SelectionListNodeTests
     }
 
     [Fact]
-    public async Task SelectionListNode_WithAnimatedContent_PropagatesInvalidation()
+    public void SelectionListNode_WithAnimatedContent_PropagatesInvalidation()
     {
+        var timeProvider = new FakeTimeProvider();
         using var list = new SelectionListNode<string>(
             new[] { "Loading" },
             s => new SelectionItemContent()
                 .AddLine(
-                    new SpinnerSegment(Streaming.SpinnerStyle.Dots, Color.Blue, intervalMs: 10),
+                    new SpinnerSegment(Streaming.SpinnerStyle.Dots, Color.Blue, intervalMs: 10, timeProvider: timeProvider),
                     new StaticTextSegment($" {s}...", Color.White)));
+        var invalidations = 0;
+        using var subscription = list.Invalidated.Subscribe(_ => invalidations++);
 
-        // Wait for invalidation from spinner
-        await list.Invalidated
-            .FirstAsync()
-            .WaitAsync(TimeSpan.FromSeconds(1));
+        timeProvider.Advance(TimeSpan.FromMilliseconds(10));
 
-        Assert.True(true); // Got here means invalidation propagated
+        Assert.Equal(1, invalidations);
     }
 
     [Fact]
