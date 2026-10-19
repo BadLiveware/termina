@@ -482,12 +482,54 @@ public class LiveDataNode : LayoutNode, IInvalidatingNode
 
 ### Container Lifecycle Propagation
 
-If your custom container holds child nodes, propagate lifecycle calls. Dispatch on `IActivatableNode` — not the concrete `LayoutNode` class — so interface-based children (like `FilePickerNode`) receive lifecycle calls too:
+If your custom container holds child nodes, propagate lifecycle calls.
+Dispatch on `IActivatableNode` — not the concrete `LayoutNode` class — so interface-based children (like `FilePickerNode`) receive lifecycle calls too.
+
+To redraw the page when a child changes, implement `IInvalidatingNode` and merge the `Invalidated` streams of the children.
+`Merge` subscribes to the children only while something subscribes to the container.
+Thus a container that the layout no longer uses does not stay reachable from a child that lives longer than the container.
+A container that derives from `ContainerNode` does this for you, also for children that you add later with `AddChild` and `AddChildren`.
 
 ```csharp
-public class CustomContainer : LayoutNode
+public class CustomContainer : LayoutNode, IInvalidatingNode
 {
     private readonly List<ILayoutNode> _children = new();
+
+    public CustomContainer(params ILayoutNode[] children)
+    {
+        _children.AddRange(children);
+        Invalidated = _children
+            .OfType<IInvalidatingNode>()
+            .Select(child => child.Invalidated)
+            .Merge();
+    }
+
+    public Observable<Unit> Invalidated { get; }
+
+    public override Size Measure(Size available)
+    {
+        // Stack the children from top to bottom
+        var width = 0;
+        var height = 0;
+        foreach (var child in _children)
+        {
+            var size = child.Measure(new Size(available.Width, Math.Max(0, available.Height - height)));
+            width = Math.Max(width, size.Width);
+            height += size.Height;
+        }
+        return new Size(width, height);
+    }
+
+    public override void Render(IRenderContext context, Rect bounds)
+    {
+        var y = bounds.Y;
+        foreach (var child in _children)
+        {
+            var size = child.Measure(new Size(bounds.Width, Math.Max(0, bounds.Bottom - y)));
+            child.Render(context, new Rect(bounds.X, y, bounds.Width, size.Height));
+            y += size.Height;
+        }
+    }
 
     public override void OnActivate()
     {

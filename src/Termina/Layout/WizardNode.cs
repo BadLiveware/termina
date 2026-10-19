@@ -20,7 +20,7 @@ public sealed class WizardNode<TStep> : LayoutNode, IFocusable, IInvalidatingNod
     private readonly Subject<TStep> _stepChanged = new();
     private readonly Subject<WizardBeforeAdvanceArgs<TStep>> _beforeAdvance = new();
     private readonly Subject<Unit> _completed = new();
-    private readonly Subject<Unit> _invalidated = new();
+    private readonly ChildInvalidationLink _contentInvalidation = new();
 
     private int _currentStepIndex;
     private int _currentSubStep;
@@ -30,7 +30,6 @@ public sealed class WizardNode<TStep> : LayoutNode, IFocusable, IInvalidatingNod
 
     // Internal layout
     private KeyedDynamicLayoutNode<int>? _contentNode;
-    private IDisposable? _contentInvalidationSubscription;
     private string? _title;
     private WizardProgressStyle _progressStyle = WizardProgressStyle.BlockBar;
     private BorderStyle? _borderStyle;
@@ -52,7 +51,7 @@ public sealed class WizardNode<TStep> : LayoutNode, IFocusable, IInvalidatingNod
     public Observable<Unit> Completed => _completed;
 
     /// <inheritdoc />
-    public Observable<Unit> Invalidated => _invalidated;
+    public Observable<Unit> Invalidated => _contentInvalidation.Invalidated;
 
     /// <summary>
     /// Gets the current step.
@@ -85,7 +84,7 @@ public sealed class WizardNode<TStep> : LayoutNode, IFocusable, IInvalidatingNod
     {
         _hasFocus = true;
         PropagateFocusToContent();
-        _invalidated.OnNext(Unit.Default);
+        _contentInvalidation.Emit();
     }
 
     /// <inheritdoc />
@@ -93,7 +92,7 @@ public sealed class WizardNode<TStep> : LayoutNode, IFocusable, IInvalidatingNod
     {
         _hasFocus = false;
         BlurContentChild();
-        _invalidated.OnNext(Unit.Default);
+        _contentInvalidation.Emit();
     }
 
     /// <inheritdoc />
@@ -267,7 +266,7 @@ public sealed class WizardNode<TStep> : LayoutNode, IFocusable, IInvalidatingNod
             _contentNode?.Invalidate();
             if (_hasFocus)
                 PropagateFocusToContent();
-            _invalidated.OnNext(Unit.Default);
+            _contentInvalidation.Emit();
             return true;
         }
 
@@ -291,7 +290,7 @@ public sealed class WizardNode<TStep> : LayoutNode, IFocusable, IInvalidatingNod
         _contentNode?.Invalidate();
         if (_hasFocus)
             PropagateFocusToContent();
-        _invalidated.OnNext(Unit.Default);
+        _contentInvalidation.Emit();
         _stepChanged.OnNext(CurrentStep);
         return true;
     }
@@ -311,7 +310,7 @@ public sealed class WizardNode<TStep> : LayoutNode, IFocusable, IInvalidatingNod
             _contentNode?.Invalidate();
             if (_hasFocus)
                 PropagateFocusToContent();
-            _invalidated.OnNext(Unit.Default);
+            _contentInvalidation.Emit();
             return true;
         }
 
@@ -324,7 +323,7 @@ public sealed class WizardNode<TStep> : LayoutNode, IFocusable, IInvalidatingNod
         _contentNode?.Invalidate();
         if (_hasFocus)
             PropagateFocusToContent();
-        _invalidated.OnNext(Unit.Default);
+        _contentInvalidation.Emit();
         _stepChanged.OnNext(CurrentStep);
         return true;
     }
@@ -345,7 +344,7 @@ public sealed class WizardNode<TStep> : LayoutNode, IFocusable, IInvalidatingNod
         _contentNode?.Invalidate();
         if (_hasFocus)
             PropagateFocusToContent();
-        _invalidated.OnNext(Unit.Default);
+        _contentInvalidation.Emit();
         _stepChanged.OnNext(CurrentStep);
         return true;
     }
@@ -367,7 +366,7 @@ public sealed class WizardNode<TStep> : LayoutNode, IFocusable, IInvalidatingNod
         _contentNode?.Invalidate();
         if (_hasFocus)
             PropagateFocusToContent();
-        _invalidated.OnNext(Unit.Default);
+        _contentInvalidation.Emit();
         return true;
     }
 
@@ -484,8 +483,7 @@ public sealed class WizardNode<TStep> : LayoutNode, IFocusable, IInvalidatingNod
 
         // Propagate content invalidation (e.g., SelectionListNode highlight changes)
         // up through the wizard so the page triggers a redraw
-        _contentInvalidationSubscription = _contentNode.Invalidated
-            .Subscribe(_ => _invalidated.OnNext(Unit.Default));
+        _contentInvalidation.Attach(_contentNode);
 
         if (_isActive)
             _contentNode.OnActivate();
@@ -628,13 +626,6 @@ public sealed class WizardNode<TStep> : LayoutNode, IFocusable, IInvalidatingNod
     }
 
     /// <inheritdoc />
-    internal override void DisconnectChildInvalidationSubscriptions()
-    {
-        _contentInvalidationSubscription?.Dispose();
-        _contentInvalidationSubscription = null;
-    }
-
-    /// <inheritdoc />
     public override void OnActivate()
     {
         _isActive = true;
@@ -659,10 +650,7 @@ public sealed class WizardNode<TStep> : LayoutNode, IFocusable, IInvalidatingNod
         _beforeAdvance.Dispose();
         _completed.OnCompleted();
         _completed.Dispose();
-        _invalidated.OnCompleted();
-        _invalidated.Dispose();
-
-        _contentInvalidationSubscription?.Dispose();
+        _contentInvalidation.Dispose();
         _contentNode?.Dispose();
         base.Dispose();
     }

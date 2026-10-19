@@ -41,12 +41,16 @@ public sealed class ScrollableContainerNode : LayoutNode, IInvalidatingNode, ISc
     private int _viewportHeight;
     private int _previousContentHeight;
     private ScreenBounds _lastRenderedBounds = ScreenBounds.Empty;
-    private readonly Subject<Unit> _invalidated = new();
-    private IDisposable? _contentSubscription;
+    private readonly ChildInvalidationLink _contentInvalidation;
     private bool _isActive;
 
+    /// <summary>
+    /// Creates an empty scrollable container.
+    /// </summary>
+    public ScrollableContainerNode() => _contentInvalidation = new ChildInvalidationLink(OnContentInvalidated);
+
     /// <inheritdoc />
-    public Observable<Unit> Invalidated => _invalidated;
+    public Observable<Unit> Invalidated => _contentInvalidation.Invalidated;
 
     /// <summary>
     /// Gets or sets the automatic scroll policy.
@@ -105,21 +109,14 @@ public sealed class ScrollableContainerNode : LayoutNode, IInvalidatingNode, ISc
     /// </summary>
     public ScrollableContainerNode WithContent(ILayoutNode content)
     {
-        // Dispose the previous content's subscription, and deactivate the previous
-        // content (active/inactive pattern) rather than dispose it. Content is
-        // disposed only at teardown, in Dispose().
-        _contentSubscription?.Dispose();
+        // Deactivate the previous content (active/inactive pattern) rather than dispose it.
+        // Content is disposed only at teardown, in Dispose().
         if (_content is IActivatableNode oldContent)
             oldContent.OnDeactivate();
+
+        _contentInvalidation.Replace(_content, content);
         _content = content;
         ApplyRuntimeContextToChild(content);
-
-        // If content is invalidating, subscribe to the observable
-        if (_content is IInvalidatingNode invalidating)
-        {
-            _contentSubscription = invalidating.Invalidated.Subscribe(_ => OnContentInvalidated());
-        }
-
         if (_isActive && content is IActivatableNode newContent)
             newContent.OnActivate();
 
@@ -162,7 +159,7 @@ public sealed class ScrollableContainerNode : LayoutNode, IInvalidatingNode, ISc
         if (CanScrollDown)
         {
             _scrollOffset++;
-            _invalidated.OnNext(Unit.Default);
+            _contentInvalidation.Emit();
         }
     }
 
@@ -174,7 +171,7 @@ public sealed class ScrollableContainerNode : LayoutNode, IInvalidatingNode, ISc
         if (CanScrollUp)
         {
             _scrollOffset--;
-            _invalidated.OnNext(Unit.Default);
+            _contentInvalidation.Emit();
         }
     }
 
@@ -191,7 +188,7 @@ public sealed class ScrollableContainerNode : LayoutNode, IInvalidatingNode, ISc
         if (newOffset != _scrollOffset)
         {
             _scrollOffset = newOffset;
-            _invalidated.OnNext(Unit.Default);
+            _contentInvalidation.Emit();
         }
     }
 
@@ -204,7 +201,7 @@ public sealed class ScrollableContainerNode : LayoutNode, IInvalidatingNode, ISc
         if (newOffset != _scrollOffset)
         {
             _scrollOffset = newOffset;
-            _invalidated.OnNext(Unit.Default);
+            _contentInvalidation.Emit();
         }
     }
 
@@ -217,7 +214,7 @@ public sealed class ScrollableContainerNode : LayoutNode, IInvalidatingNode, ISc
         if (newOffset != _scrollOffset)
         {
             _scrollOffset = newOffset;
-            _invalidated.OnNext(Unit.Default);
+            _contentInvalidation.Emit();
         }
     }
 
@@ -241,7 +238,7 @@ public sealed class ScrollableContainerNode : LayoutNode, IInvalidatingNode, ISc
     {
         // Heights are stale until the next Measure, so Measure makes the real tail decision.
         ApplyAutoScrollPolicy(IsNearBottom);
-        _invalidated.OnNext(Unit.Default);
+        _contentInvalidation.Emit();
     }
 
     private void ApplyAutoScrollPolicy(bool wasNearBottom)
@@ -270,13 +267,6 @@ public sealed class ScrollableContainerNode : LayoutNode, IInvalidatingNode, ISc
 
     /// <inheritdoc />
     internal override IEnumerable<ILayoutNode> GetChildNodes() => [_content];
-
-    /// <inheritdoc />
-    internal override void DisconnectChildInvalidationSubscriptions()
-    {
-        _contentSubscription?.Dispose();
-        _contentSubscription = null;
-    }
 
     /// <inheritdoc />
     public override void OnActivate()
@@ -398,9 +388,7 @@ public sealed class ScrollableContainerNode : LayoutNode, IInvalidatingNode, ISc
     /// <inheritdoc />
     public override void Dispose()
     {
-        _contentSubscription?.Dispose();
-        _invalidated.OnCompleted();
-        _invalidated.Dispose();
+        _contentInvalidation.Dispose();
         _content.Dispose();
         base.Dispose();
     }

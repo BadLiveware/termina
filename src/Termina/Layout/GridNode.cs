@@ -48,12 +48,9 @@ public enum GridNavigationMode
 /// </remarks>
 public sealed class GridNode : LayoutNode, IFocusable, IInvalidatingNode
 {
-    private readonly Subject<Unit> _invalidated = new();
+    private readonly ChildInvalidationLink _cellInvalidation = new();
     private readonly Subject<(int Row, int Col)> _focusedCellChanged = new();
     private readonly Subject<(int Row, int Col, ILayoutNode? Cell)> _cellActivated = new();
-    // Invalidation subscription per content node, so a cell swap can dispose exactly the displaced
-    // node's subscription. Keyed by content because the subscription belongs to the node, not the cell.
-    private readonly Dictionary<ILayoutNode, IDisposable> _cellSubscriptions = new();
 
     private ILayoutNode?[,] _cells;
     private (int ColSpan, int RowSpan)[,] _spans;
@@ -104,16 +101,7 @@ public sealed class GridNode : LayoutNode, IFocusable, IInvalidatingNode
     public bool ShowFocusHighlight { get; private set; } = true;
 
     /// <inheritdoc />
-    public Observable<Unit> Invalidated => _invalidated.AsObservable();
-
-    /// <inheritdoc />
-    internal override void DisconnectChildInvalidationSubscriptions()
-    {
-        foreach (var subscription in _cellSubscriptions.Values)
-            subscription.Dispose();
-
-        _cellSubscriptions.Clear();
-    }
+    public Observable<Unit> Invalidated => _cellInvalidation.Invalidated;
 
     /// <summary>
     /// Observable that emits when the focused cell changes.
@@ -274,7 +262,7 @@ public sealed class GridNode : LayoutNode, IFocusable, IInvalidatingNode
         EnsureColumns(col + colSpan);
 
         // Remove whatever is currently in the target cell: deactivate its content (do not dispose — a
-        // swapped-out node may be reused) and dispose that cell's own invalidation subscription.
+        // swapped-out node may be reused) and release that cell's own invalidation subscription.
         DisplaceCell(row, col);
 
         _cells[row, col] = content;
@@ -295,13 +283,10 @@ public sealed class GridNode : LayoutNode, IFocusable, IInvalidatingNode
             }
         }
 
-        // Subscribe to the new content's invalidation, tracked by content so a later swap can remove it.
-        if (content is IInvalidatingNode invalidating)
-        {
-            _cellSubscriptions[content] =
-                invalidating.Invalidated.Subscribe(_ => _invalidated.OnNext(Unit.Default));
-        }
+        if (content is null)
+            return this;
 
+        _cellInvalidation.Attach(content);
         if (_isActive && content is IActivatableNode activatable)
             activatable.OnActivate();
 
@@ -346,7 +331,7 @@ public sealed class GridNode : LayoutNode, IFocusable, IInvalidatingNode
     #endregion
 
     /// <summary>
-    /// Removes the content currently occupying a cell: disposes that cell's invalidation subscription and
+    /// Removes the content currently occupying a cell: releases that cell's invalidation subscription and
     /// deactivates the content (active/inactive pattern), then clears the cell. The content is not disposed
     /// here — a swapped-out node may still be reused; disposal happens only in <see cref="Dispose"/>.
     /// </summary>
@@ -356,8 +341,7 @@ public sealed class GridNode : LayoutNode, IFocusable, IInvalidatingNode
         if (content is null)
             return;
 
-        if (_cellSubscriptions.Remove(content, out var subscription))
-            subscription.Dispose();
+        _cellInvalidation.Detach(content);
 
         if (content is IActivatableNode activatable)
             activatable.OnDeactivate();
@@ -778,14 +762,14 @@ public sealed class GridNode : LayoutNode, IFocusable, IInvalidatingNode
     public void OnFocused()
     {
         _hasFocus = true;
-        _invalidated.OnNext(Unit.Default);
+        _cellInvalidation.Emit();
     }
 
     /// <inheritdoc />
     public void OnBlurred()
     {
         _hasFocus = false;
-        _invalidated.OnNext(Unit.Default);
+        _cellInvalidation.Emit();
     }
 
     /// <inheritdoc />
@@ -859,7 +843,7 @@ public sealed class GridNode : LayoutNode, IFocusable, IInvalidatingNode
         if (oldRow != _focusedRow || oldCol != _focusedCol)
         {
             _focusedCellChanged.OnNext((_focusedRow, _focusedCol));
-            _invalidated.OnNext(Unit.Default);
+            _cellInvalidation.Emit();
         }
 
         return true;
@@ -942,12 +926,7 @@ public sealed class GridNode : LayoutNode, IFocusable, IInvalidatingNode
         if (_disposed) return;
         _disposed = true;
 
-        foreach (var subscription in _cellSubscriptions.Values)
-            subscription.Dispose();
-        _cellSubscriptions.Clear();
-
-        _invalidated.OnCompleted();
-        _invalidated.Dispose();
+        _cellInvalidation.Dispose();
         _focusedCellChanged.OnCompleted();
         _focusedCellChanged.Dispose();
         _cellActivated.OnCompleted();

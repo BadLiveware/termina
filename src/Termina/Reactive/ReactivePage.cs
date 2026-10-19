@@ -318,11 +318,12 @@ public abstract class ReactivePage<TViewModel> : IBindablePage, IDisposable
 
             ApplyRuntimeContext(newRoot);
 
-            var newNodes = CollectLayoutNodes(newRoot);
-
             // Tear down the old framework wiring before we touch the previous
             // tree so any invalidation raised during deactivation doesn't
-            // schedule redraws against the outgoing layout.
+            // schedule redraws against the outgoing layout. A parent node
+            // subscribes to its children only while its own Invalidated stream
+            // is observed, so this also releases the child subscriptions of the
+            // old tree, and a reused child does not keep an abandoned parent alive.
             _layoutSubscriptions.Clear();
 
             // Deactivate the old tree before activating the new one. If the
@@ -331,11 +332,6 @@ public abstract class ReactivePage<TViewModel> : IBindablePage, IDisposable
             // activated rather than being shut back down by the old tree.
             if (oldRoot is IActivatableNode oldNode)
                 oldNode.OnDeactivate();
-
-            // Disconnect invalidation subscriptions on old nodes that won't
-            // survive the rebuild. This keeps abandoned wrappers from being
-            // retained through reused children once the swap completes.
-            DisconnectAbandonedNodes(oldRoot, newNodes);
 
             // Atomic swap: from here on, _layoutRoot points at the new tree
             // and the old tree is fully replaced.
@@ -408,25 +404,6 @@ public abstract class ReactivePage<TViewModel> : IBindablePage, IDisposable
         }
     }
 
-    private static HashSet<ILayoutNode> CollectLayoutNodes(ILayoutNode root)
-    {
-        var visited = new HashSet<ILayoutNode>();
-        var stack = new Stack<ILayoutNode>();
-        stack.Push(root);
-
-        while (stack.Count > 0)
-        {
-            var current = stack.Pop();
-            if (!visited.Add(current) || current is not LayoutNode layoutNode)
-                continue;
-
-            foreach (var child in layoutNode.GetChildNodes())
-                stack.Push(child);
-        }
-
-        return visited;
-    }
-
     private void OnLayoutStructureChanged()
     {
         if (_layoutRoot is { } root)
@@ -455,17 +432,6 @@ public abstract class ReactivePage<TViewModel> : IBindablePage, IDisposable
             ViewModel.RequestRedraw,
             OnLayoutStructureChanged);
         LayoutRuntimeContextInjector.Apply(root, context);
-    }
-
-    private static void DisconnectAbandonedNodes(ILayoutNode? root, HashSet<ILayoutNode> retainedNodes)
-    {
-        if (root is not LayoutNode layoutNode || retainedNodes.Contains(root))
-            return;
-
-        layoutNode.DisconnectChildInvalidationSubscriptions();
-
-        foreach (var child in layoutNode.GetChildNodes())
-            DisconnectAbandonedNodes(child, retainedNodes);
     }
 
     /// <summary>

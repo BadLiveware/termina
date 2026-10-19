@@ -95,14 +95,6 @@ public abstract class LayoutNode : ILayoutNode, IActivatableNode, ILayoutRuntime
     internal virtual IEnumerable<ILayoutNode> GetChildNodes() => [];
 
     /// <summary>
-    /// Disconnect subscriptions from this node to its children without
-    /// disposing or mutating the children themselves.
-    /// </summary>
-    internal virtual void DisconnectChildInvalidationSubscriptions()
-    {
-    }
-
-    /// <summary>
     /// Set width to a fixed value.
     /// </summary>
     public LayoutNode Width(int value)
@@ -178,16 +170,20 @@ public abstract class LayoutNode : ILayoutNode, IActivatableNode, ILayoutRuntime
 /// <summary>
 /// Base class for container nodes that arrange children.
 /// </summary>
+/// <remarks>
+/// The container subscribes to the invalidation of its children only while something subscribes to its own
+/// <see cref="Invalidated"/> stream. A container that nothing observes holds no subscription to its children,
+/// so a child that lives longer than the container does not keep the container alive.
+/// </remarks>
 public abstract class ContainerNode : LayoutNode, IContainerNode, IInvalidatingNode
 {
     private readonly List<ILayoutNode> _children = new();
-    private readonly List<IDisposable> _childInvalidationSubscriptions = new();
-    private readonly Subject<Unit> _invalidated = new();
+    private readonly ChildInvalidationLink _childInvalidation = new();
     private int _disposeState;
     private bool _isActive;
 
     /// <inheritdoc />
-    public Observable<Unit> Invalidated => _invalidated;
+    public Observable<Unit> Invalidated => _childInvalidation.Invalidated;
 
     /// <inheritdoc />
     public IReadOnlyList<ILayoutNode> Children => _children;
@@ -202,7 +198,7 @@ public abstract class ContainerNode : LayoutNode, IContainerNode, IInvalidatingN
     {
         ApplyRuntimeContextToChild(child);
         _children.Add(child);
-        SubscribeToChildInvalidation(child);
+        _childInvalidation.Attach(child);
         if (_isActive && child is IActivatableNode node)
             node.OnActivate();
     }
@@ -216,18 +212,6 @@ public abstract class ContainerNode : LayoutNode, IContainerNode, IInvalidatingN
             AddChild(child);
     }
 
-    /// <summary>
-    /// Subscribe to a child's invalidation events and propagate them upward.
-    /// </summary>
-    private void SubscribeToChildInvalidation(ILayoutNode child)
-    {
-        if (child is IInvalidatingNode invalidating)
-        {
-            var subscription = invalidating.Invalidated.Subscribe(_ => _invalidated.OnNext(Unit.Default));
-            _childInvalidationSubscriptions.Add(subscription);
-        }
-    }
-
     /// <inheritdoc />
     public override void Dispose()
     {
@@ -237,16 +221,7 @@ public abstract class ContainerNode : LayoutNode, IContainerNode, IInvalidatingN
         if (Interlocked.Exchange(ref _disposeState, 1) != 0)
             return;
 
-        // Dispose child invalidation subscriptions
-        foreach (var subscription in _childInvalidationSubscriptions)
-        {
-            subscription.Dispose();
-        }
-        _childInvalidationSubscriptions.Clear();
-
-        // Complete and dispose our invalidation subject
-        _invalidated.OnCompleted();
-        _invalidated.Dispose();
+        _childInvalidation.Dispose();
 
         // Dispose children
         foreach (var child in _children)
@@ -254,17 +229,6 @@ public abstract class ContainerNode : LayoutNode, IContainerNode, IInvalidatingN
             child.Dispose();
         }
         base.Dispose();
-    }
-
-    /// <inheritdoc />
-    internal override void DisconnectChildInvalidationSubscriptions()
-    {
-        foreach (var subscription in _childInvalidationSubscriptions)
-        {
-            subscription.Dispose();
-        }
-
-        _childInvalidationSubscriptions.Clear();
     }
 
     /// <summary>

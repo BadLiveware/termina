@@ -91,6 +91,29 @@ Termina uses a two-phase input routing model (similar to DOM event handling):
 
 This model ensures navigation keys (Escape, Tab) work reliably while allowing focused components to handle their own input.
 
+### Invalidation
+
+A layout node tells the page that it must render again through its `Invalidated` stream.
+Container and wrapper nodes forward the `Invalidated` stream of their children to their own `Invalidated` stream.
+These nodes are `StackLayout`, `VerticalLayout`, `HorizontalLayout`, `PanelNode`, `ScrollableContainerNode`, `GridNode`, `DynamicLayoutNode`, `KeyedDynamicLayoutNode`, `ReactiveLayoutNode`, and `WizardNode`.
+The page subscribes to the stream of the layout root, and requests a redraw for each emission.
+
+A parent node subscribes to the streams of its children only while something subscribes to its own stream:
+
+- The first subscriber connects the parent node to all of its children.
+- A child that you add to an observed parent node is subscribed at once.
+- A child that you remove or replace is released at once.
+- When the last subscriber leaves, the parent node releases all of its child subscriptions.
+- `Dispose()` releases the child subscriptions and completes the stream.
+
+Activation does not change the forwarding.
+`OnActivate()` and `OnDeactivate()` start and stop the children, for example timers and animations.
+An active parent node activates a child that you add or that replaces the old content.
+
+When the page replaces its layout root, it releases its subscription to the old root.
+Thus the old tree releases its child subscriptions, and a child that the new tree reuses does not keep the old parent nodes alive.
+For example, a reactive layout factory can put the same stateful node into a new container for each value.
+
 ### On Navigation
 
 **ResetOnNavigation (default):**

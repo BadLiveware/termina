@@ -13,12 +13,11 @@ namespace Termina.Layout;
 public sealed class PanelNode : LayoutNode, IInvalidatingNode
 {
     private ILayoutNode _content = new EmptyNode();
-    private IDisposable? _contentInvalidationSubscription;
+    private readonly ChildInvalidationLink _contentInvalidation = new();
     private bool _isActive;
-    private readonly Subject<Unit> _invalidated = new();
 
     /// <inheritdoc />
-    public Observable<Unit> Invalidated => _invalidated;
+    public Observable<Unit> Invalidated => _contentInvalidation.Invalidated;
 
     /// <summary>
     /// Panel title (displayed in top border).
@@ -107,24 +106,14 @@ public sealed class PanelNode : LayoutNode, IInvalidatingNode
     /// </summary>
     public PanelNode WithContent(ILayoutNode content)
     {
-        // Dispose the old content's subscription, and deactivate the old content
-        // (active/inactive pattern) rather than dispose it — a swapped-out node may
-        // still be reused. Content is disposed only at teardown, in Dispose().
-        _contentInvalidationSubscription?.Dispose();
+        // Deactivate the old content (active/inactive pattern) rather than dispose it — a swapped-out
+        // node may still be reused. Content is disposed only at teardown, in Dispose().
         if (_content is IActivatableNode oldContent)
             oldContent.OnDeactivate();
 
-        // Set new content
+        _contentInvalidation.Replace(_content, content);
         _content = content;
         ApplyRuntimeContextToChild(content);
-
-        // Subscribe to new content's invalidation events
-        if (content is IInvalidatingNode invalidating)
-        {
-            _contentInvalidationSubscription = invalidating.Invalidated
-                .Subscribe(_ => _invalidated.OnNext(Unit.Default));
-        }
-
         if (_isActive && content is IActivatableNode newContent)
             newContent.OnActivate();
 
@@ -150,13 +139,6 @@ public sealed class PanelNode : LayoutNode, IInvalidatingNode
 
     /// <inheritdoc />
     internal override IEnumerable<ILayoutNode> GetChildNodes() => [_content];
-
-    /// <inheritdoc />
-    internal override void DisconnectChildInvalidationSubscriptions()
-    {
-        _contentInvalidationSubscription?.Dispose();
-        _contentInvalidationSubscription = null;
-    }
 
     /// <inheritdoc />
     public override Size Measure(Size available)
@@ -303,9 +285,7 @@ public sealed class PanelNode : LayoutNode, IInvalidatingNode
     /// <inheritdoc />
     public override void Dispose()
     {
-        _contentInvalidationSubscription?.Dispose();
-        _invalidated.OnCompleted();
-        _invalidated.Dispose();
+        _contentInvalidation.Dispose();
         _content.Dispose();
         base.Dispose();
     }

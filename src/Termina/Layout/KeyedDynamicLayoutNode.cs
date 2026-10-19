@@ -56,8 +56,7 @@ public sealed class KeyedDynamicLayoutNode<TKey> : LayoutNode, IInvalidatingNode
     // that the factory retains and returns again.
     private readonly ConditionalWeakTable<ILayoutNode, SeenChildMarker> _seenEvictionChildren = new();
     private readonly List<ILayoutNode> _retiredChildren = [];
-    private readonly Subject<Unit> _invalidated = new();
-    private IDisposable? _childInvalidationSubscription;
+    private readonly ChildInvalidationLink _childInvalidation = new();
     private ILayoutNode _currentChild;
     private TKey? _currentKey;
     private bool _hasCurrentKey;
@@ -72,7 +71,7 @@ public sealed class KeyedDynamicLayoutNode<TKey> : LayoutNode, IInvalidatingNode
     internal const int MaxReevaluationPasses = 8;
 
     /// <inheritdoc />
-    public Observable<Unit> Invalidated => _invalidated;
+    public Observable<Unit> Invalidated => _childInvalidation.Invalidated;
 
     /// <summary>
     /// Create a keyed dynamic layout node.
@@ -130,7 +129,7 @@ public sealed class KeyedDynamicLayoutNode<TKey> : LayoutNode, IInvalidatingNode
         }
 
         EvaluateFactory();
-        _invalidated.OnNext(Unit.Default);
+        _childInvalidation.Emit();
     }
 
     /// <summary>
@@ -238,9 +237,9 @@ public sealed class KeyedDynamicLayoutNode<TKey> : LayoutNode, IInvalidatingNode
         if (_cachePolicy == KeyedDynamicCachePolicy.EvictOnKeyChange)
             _retiredChildren.Add(_currentChild);
 
+        _childInvalidation.Replace(_currentChild, newChild);
         _currentChild = newChild;
         ApplyRuntimeContextToChild(newChild);
-        SubscribeToChildInvalidation(newChild);
 
         // Activate new child if we're currently active
         if (_isActive && newChild is IActivatableNode newLayoutNode)
@@ -251,30 +250,8 @@ public sealed class KeyedDynamicLayoutNode<TKey> : LayoutNode, IInvalidatingNode
         RuntimeContext?.NotifyLayoutStructureChanged();
     }
 
-    /// <summary>
-    /// Subscribe to a child's invalidation events and propagate them upward.
-    /// </summary>
-    private void SubscribeToChildInvalidation(ILayoutNode child)
-    {
-        _childInvalidationSubscription?.Dispose();
-        _childInvalidationSubscription = null;
-
-        if (child is IInvalidatingNode invalidating)
-        {
-            _childInvalidationSubscription = invalidating.Invalidated
-                .Subscribe(_ => _invalidated.OnNext(Unit.Default));
-        }
-    }
-
     /// <inheritdoc />
     internal override IEnumerable<ILayoutNode> GetChildNodes() => [_currentChild];
-
-    /// <inheritdoc />
-    internal override void DisconnectChildInvalidationSubscriptions()
-    {
-        _childInvalidationSubscription?.Dispose();
-        _childInvalidationSubscription = null;
-    }
 
     /// <inheritdoc />
     public override Size Measure(Size available)
@@ -319,9 +296,6 @@ public sealed class KeyedDynamicLayoutNode<TKey> : LayoutNode, IInvalidatingNode
         _isActive = true;
         _needsEvaluation = true;
 
-        // Re-subscribe to current child's invalidation events
-        SubscribeToChildInvalidation(_currentChild);
-
         // Activate current child
         if (_currentChild is IActivatableNode childNode)
         {
@@ -352,7 +326,7 @@ public sealed class KeyedDynamicLayoutNode<TKey> : LayoutNode, IInvalidatingNode
             return;
 
         _disposed = true;
-        _childInvalidationSubscription?.Dispose();
+        _childInvalidation.Dispose();
 
         DisposeRetiredChildren();
 
@@ -371,9 +345,6 @@ public sealed class KeyedDynamicLayoutNode<TKey> : LayoutNode, IInvalidatingNode
         {
             _currentChild.Dispose();
         }
-
-        _invalidated.OnCompleted();
-        _invalidated.Dispose();
 
         base.Dispose();
     }

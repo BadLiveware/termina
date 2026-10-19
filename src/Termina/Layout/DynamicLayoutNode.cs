@@ -18,8 +18,7 @@ namespace Termina.Layout;
 public sealed class DynamicLayoutNode : LayoutNode, IInvalidatingNode
 {
     private readonly Func<ILayoutNode> _factory;
-    private readonly Subject<Unit> _invalidated = new();
-    private IDisposable? _childInvalidationSubscription;
+    private readonly ChildInvalidationLink _childInvalidation = new();
     private ILayoutNode _currentChild;
     private bool _isActive;
     private bool _needsEvaluation = true;
@@ -30,7 +29,7 @@ public sealed class DynamicLayoutNode : LayoutNode, IInvalidatingNode
     internal const int MaxReevaluationPasses = 8;
 
     /// <inheritdoc />
-    public Observable<Unit> Invalidated => _invalidated;
+    public Observable<Unit> Invalidated => _childInvalidation.Invalidated;
 
     /// <summary>
     /// Create a dynamic layout node that evaluates a factory once, then only on <see cref="Invalidate"/>.
@@ -60,7 +59,7 @@ public sealed class DynamicLayoutNode : LayoutNode, IInvalidatingNode
         }
 
         EvaluateFactory();
-        _invalidated.OnNext(Unit.Default);
+        _childInvalidation.Emit();
     }
 
     /// <summary>
@@ -125,9 +124,9 @@ public sealed class DynamicLayoutNode : LayoutNode, IInvalidatingNode
             oldLayoutNode.OnDeactivate();
         }
 
+        _childInvalidation.Replace(_currentChild, newChild);
         _currentChild = newChild;
         ApplyRuntimeContextToChild(newChild);
-        SubscribeToChildInvalidation(newChild);
 
         // Activate new child if we're currently active
         if (_isActive && newChild is IActivatableNode newLayoutNode)
@@ -138,30 +137,8 @@ public sealed class DynamicLayoutNode : LayoutNode, IInvalidatingNode
         RuntimeContext?.NotifyLayoutStructureChanged();
     }
 
-    /// <summary>
-    /// Subscribe to a child's invalidation events and propagate them upward.
-    /// </summary>
-    private void SubscribeToChildInvalidation(ILayoutNode child)
-    {
-        _childInvalidationSubscription?.Dispose();
-        _childInvalidationSubscription = null;
-
-        if (child is IInvalidatingNode invalidating)
-        {
-            _childInvalidationSubscription = invalidating.Invalidated
-                .Subscribe(_ => _invalidated.OnNext(Unit.Default));
-        }
-    }
-
     /// <inheritdoc />
     internal override IEnumerable<ILayoutNode> GetChildNodes() => [_currentChild];
-
-    /// <inheritdoc />
-    internal override void DisconnectChildInvalidationSubscriptions()
-    {
-        _childInvalidationSubscription?.Dispose();
-        _childInvalidationSubscription = null;
-    }
 
     /// <inheritdoc />
     public override Size Measure(Size available)
@@ -189,9 +166,6 @@ public sealed class DynamicLayoutNode : LayoutNode, IInvalidatingNode
         _isActive = true;
         _needsEvaluation = true;
 
-        // Re-subscribe to current child's invalidation events
-        SubscribeToChildInvalidation(_currentChild);
-
         // Activate current child
         if (_currentChild is IActivatableNode childNode)
         {
@@ -218,9 +192,7 @@ public sealed class DynamicLayoutNode : LayoutNode, IInvalidatingNode
     /// <inheritdoc />
     public override void Dispose()
     {
-        _childInvalidationSubscription?.Dispose();
-        _invalidated.OnCompleted();
-        _invalidated.Dispose();
+        _childInvalidation.Dispose();
         _currentChild.Dispose();
         base.Dispose();
     }

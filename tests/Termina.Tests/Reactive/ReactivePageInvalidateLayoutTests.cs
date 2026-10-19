@@ -6,6 +6,7 @@ using Termina.Input;
 using Termina.Layout;
 using Termina.Reactive;
 using Termina.Rendering;
+using Termina.Tests.Layout;
 
 namespace Termina.Tests.Reactive;
 
@@ -319,25 +320,22 @@ public class ReactivePageInvalidateLayoutTests
     }
 
     [Fact]
-    public void InvalidateLayout_AbandonedWrapper_DoesNotReceiveReusedChildInvalidation()
+    public void InvalidateLayout_AbandonedWrapper_ReleasesReusedChild()
     {
         var page = new ReusedChildInPanelPage();
         page.BindForTest(new EmptyViewModel());
         page.OnNavigatedTo();
-
-        var oldRoot = Assert.IsType<PanelNode>(((Pages.IBindablePage)page).LayoutRoot);
-        var oldRootInvalidations = 0;
-        oldRoot.Invalidated.Subscribe(_ => oldRootInvalidations++);
+        Assert.Equal(1, page.SharedChild.SubscriptionCount);
 
         page.CallInvalidateLayout();
 
         var newRoot = Assert.IsType<PanelNode>(((Pages.IBindablePage)page).LayoutRoot);
         var newRootInvalidations = 0;
-        newRoot.Invalidated.Subscribe(_ => newRootInvalidations++);
+        using var newRootSubscription = newRoot.Invalidated.Subscribe(_ => newRootInvalidations++);
 
-        page.SharedChild.RaiseInvalidated();
+        page.SharedChild.Invalidate();
 
-        Assert.Equal(0, oldRootInvalidations);
+        Assert.Equal(1, page.SharedChild.SubscriptionCount);
         Assert.Equal(1, newRootInvalidations);
     }
 
@@ -513,7 +511,7 @@ public class ReactivePageInvalidateLayoutTests
 
     private sealed class ReusedChildInPanelPage : ReactivePage<EmptyViewModel>
     {
-        public TestInvalidatingNode SharedChild { get; } = new();
+        public TrackingInvalidatingNode SharedChild { get; } = new();
 
         public override ILayoutNode BuildLayout() => new PanelNode().WithContent(SharedChild);
 
