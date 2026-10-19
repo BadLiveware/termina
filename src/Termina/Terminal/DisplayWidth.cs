@@ -1,6 +1,7 @@
 // Copyright (c) Petabridge, LLC. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Buffers;
 using System.Globalization;
 using System.Text;
 
@@ -16,6 +17,14 @@ namespace Termina.Terminal;
 public readonly record struct DisplayCell(string Text, int StartIndex, int Length, int ColumnWidth);
 
 /// <summary>
+/// The position and terminal width of one Unicode text element, without the element text.
+/// </summary>
+/// <param name="StartIndex">The UTF-16 start index in the source text.</param>
+/// <param name="Length">The UTF-16 length in the source text.</param>
+/// <param name="ColumnWidth">The number of terminal columns occupied by this element.</param>
+public readonly record struct DisplayCellRange(int StartIndex, int Length, int ColumnWidth);
+
+/// <summary>
 /// Utility for measuring and manipulating text in terminal display columns.
 /// </summary>
 /// <remarks>
@@ -26,24 +35,45 @@ public readonly record struct DisplayCell(string Text, int StartIndex, int Lengt
 /// </remarks>
 public static class DisplayWidth
 {
+    private const int ZeroColumns = 0;
+    private const int NarrowColumns = 1;
+    private const int WideColumns = 2;
+    private const int EmojiPresentationSelector = 0xFE0F;
+    private const int CombiningEnclosingKeycap = 0x20E3;
+    private const int NoSliceStart = -1;
+    private const char FirstPrintableAscii = '\u0020';
+    private const char LastPrintableAscii = '\u007E';
+
+    private static readonly SearchValues<char> PrintableAscii = CreatePrintableAscii();
+
     /// <summary>
     /// Enumerates display cells using Unicode text elements so surrogate pairs and
     /// combining sequences are never split by column-based operations.
     /// </summary>
+    /// <remarks>
+    /// Each cell carries a copy of its element text. Measurement and rendering paths must use
+    /// <see cref="EnumerateCells(ReadOnlySpan{char})" />, which reports the same ranges without
+    /// a string for each element.
+    /// </remarks>
     public static IEnumerable<DisplayCell> EnumerateCells(string text)
     {
         if (string.IsNullOrEmpty(text))
             yield break;
 
-        var indexes = StringInfo.ParseCombiningCharacters(text);
-        for (var i = 0; i < indexes.Length; i++)
+        var index = 0;
+        while (index < text.Length)
         {
-            var start = indexes[i];
-            var end = i + 1 < indexes.Length ? indexes[i + 1] : text.Length;
-            var element = text[start..end];
-            yield return new DisplayCell(element, start, end - start, GetTextElementWidth(element));
+            var cell = ReadCell(text, index);
+            yield return new DisplayCell(text.Substring(index, cell.Length), index, cell.Length, cell.ColumnWidth);
+            index += cell.Length;
         }
     }
+
+    /// <summary>
+    /// Enumerates the Unicode text elements of a span and reports the terminal columns of each
+    /// one. The enumerator allocates nothing.
+    /// </summary>
+    public static DisplayCellEnumerator EnumerateCells(ReadOnlySpan<char> text) => new(text);
 
     /// <summary>
     /// Returns the number of terminal display columns occupied by a string.
@@ -53,10 +83,15 @@ public static class DisplayWidth
         if (string.IsNullOrEmpty(text))
             return 0;
 
-        // Each printable ASCII char is one text element and one column. The scan does not allocate.
-        // The cell walk below allocates one string for each text element, which costs about 16 MB
-        // for a 600,000-char line.
-        if (!text.AsSpan().ContainsAnyExceptInRange('\u0020', '\u007E'))
+        return GetColumnCount(text.AsSpan());
+    }
+
+    /// <summary>
+    /// Returns the number of terminal display columns occupied by a span of text.
+    /// </summary>
+    public static int GetColumnCount(ReadOnlySpan<char> text)
+    {
+        if (IsPrintableAscii(text))
             return text.Length;
 
         var columns = 0;
@@ -68,7 +103,11 @@ public static class DisplayWidth
     /// <summary>
     /// Returns the number of terminal display columns occupied by a single UTF-16 character.
     /// </summary>
-    public static int GetColumnCount(char c) => GetColumnCount(c.ToString());
+    public static int GetColumnCount(char c)
+    {
+        ReadOnlySpan<char> single = stackalloc char[1] { c };
+        return GetColumnCount(single);
+    }
 
     /// <summary>
     /// Removes terminal control sequences from user text before rendering it as printable content.
@@ -116,19 +155,11 @@ public static class DisplayWidth
         if (string.IsNullOrEmpty(text) || maxColumns <= 0)
             return string.Empty;
 
-        var sb = new StringBuilder();
-        var columns = 0;
+        var end = GetStringIndexForColumnCount(text.AsSpan(), maxColumns);
+        if (end >= text.Length)
+            return text;
 
-        foreach (var cell in EnumerateCells(text))
-        {
-            if (columns + cell.ColumnWidth > maxColumns)
-                break;
-
-            sb.Append(cell.Text);
-            columns += cell.ColumnWidth;
-        }
-
-        return sb.ToString();
+        return text[..end];
     }
 
     /// <summary>
@@ -139,20 +170,23 @@ public static class DisplayWidth
         if (string.IsNullOrEmpty(text) || maxColumns <= 0)
             return string.Empty;
 
-        var cells = EnumerateCells(text).ToArray();
-        var columns = 0;
-        var start = cells.Length;
+        var span = text.AsSpan();
+        var remaining = GetColumnCount(span);
+        if (remaining <= maxColumns)
+            return text;
 
-        for (var i = cells.Length - 1; i >= 0; i--)
+        if (IsPrintableAscii(span))
+            return text[^maxColumns..];
+
+        foreach (var cell in EnumerateCells(span))
         {
-            if (columns + cells[i].ColumnWidth > maxColumns)
-                break;
+            if (remaining <= maxColumns)
+                return text[cell.StartIndex..];
 
-            columns += cells[i].ColumnWidth;
-            start = i;
+            remaining -= cell.ColumnWidth;
         }
 
-        return start >= cells.Length ? string.Empty : text[cells[start].StartIndex..];
+        return string.Empty;
     }
 
     /// <summary>
@@ -165,20 +199,18 @@ public static class DisplayWidth
             return string.Empty;
 
         startColumn = Math.Max(0, startColumn);
-        var sb = new StringBuilder();
+        if (IsPrintableAscii(text))
+            return SliceAscii(text, startColumn, maxColumns);
+
         var columns = 0;
         var taken = 0;
+        var sliceStart = NoSliceStart;
+        var sliceEnd = 0;
 
-        foreach (var cell in EnumerateCells(text))
+        foreach (var cell in EnumerateCells(text.AsSpan()))
         {
             var nextColumns = columns + cell.ColumnWidth;
-            if (nextColumns <= startColumn)
-            {
-                columns = nextColumns;
-                continue;
-            }
-
-            if (columns < startColumn)
+            if (nextColumns <= startColumn || columns < startColumn)
             {
                 columns = nextColumns;
                 continue;
@@ -187,12 +219,21 @@ public static class DisplayWidth
             if (taken + cell.ColumnWidth > maxColumns)
                 break;
 
-            sb.Append(cell.Text);
+            if (sliceStart == NoSliceStart)
+                sliceStart = cell.StartIndex;
+
             taken += cell.ColumnWidth;
             columns = nextColumns;
+            sliceEnd = cell.StartIndex + cell.Length;
         }
 
-        return sb.ToString();
+        if (sliceStart == NoSliceStart)
+            return string.Empty;
+
+        if (sliceStart == 0 && sliceEnd == text.Length)
+            return text;
+
+        return text[sliceStart..sliceEnd];
     }
 
     /// <summary>
@@ -202,6 +243,20 @@ public static class DisplayWidth
     {
         if (string.IsNullOrEmpty(text) || maxColumns <= 0)
             return 0;
+
+        return GetStringIndexForColumnCount(text.AsSpan(), maxColumns);
+    }
+
+    /// <summary>
+    /// Returns the UTF-16 index after the longest prefix that fits within the column limit.
+    /// </summary>
+    public static int GetStringIndexForColumnCount(ReadOnlySpan<char> text, int maxColumns)
+    {
+        if (maxColumns <= 0)
+            return 0;
+
+        if (IsPrintableAscii(text))
+            return Math.Min(maxColumns, text.Length);
 
         var columns = 0;
         var index = 0;
@@ -229,7 +284,7 @@ public static class DisplayWidth
         var columns = 0;
         var count = Math.Min(charIndex, text.Length);
 
-        foreach (var cell in EnumerateCells(text))
+        foreach (var cell in EnumerateCells(text.AsSpan()))
         {
             if (cell.StartIndex + cell.Length > count)
                 break;
@@ -248,12 +303,9 @@ public static class DisplayWidth
             return 0;
 
         charIndex = Math.Clamp(charIndex, 0, text.Length);
-        foreach (var cell in EnumerateCells(text))
+        foreach (var cell in EnumerateCells(text.AsSpan()))
         {
-            var end = cell.StartIndex + cell.Length;
-            if (charIndex <= cell.StartIndex)
-                return cell.StartIndex;
-            if (charIndex < end)
+            if (charIndex < cell.StartIndex + cell.Length)
                 return cell.StartIndex;
         }
 
@@ -271,7 +323,7 @@ public static class DisplayWidth
         charIndex = Math.Clamp(charIndex, 0, text.Length);
         var previous = 0;
 
-        foreach (var cell in EnumerateCells(text))
+        foreach (var cell in EnumerateCells(text.AsSpan()))
         {
             if (cell.StartIndex >= charIndex)
                 break;
@@ -291,7 +343,7 @@ public static class DisplayWidth
             return 0;
 
         charIndex = Math.Clamp(charIndex, 0, text.Length);
-        foreach (var cell in EnumerateCells(text))
+        foreach (var cell in EnumerateCells(text.AsSpan()))
         {
             var end = cell.StartIndex + cell.Length;
             if (charIndex < end)
@@ -310,16 +362,54 @@ public static class DisplayWidth
             return " ";
 
         charIndex = Math.Max(0, charIndex);
-        foreach (var cell in EnumerateCells(text))
+        foreach (var cell in EnumerateCells(text.AsSpan()))
         {
             if (charIndex >= cell.StartIndex && charIndex < cell.StartIndex + cell.Length)
-                return cell.Text;
+                return CellText.From(text, cell.StartIndex, cell.Length);
         }
 
         return " ";
     }
 
-    private static int GetTextElementWidth(string element)
+    /// <summary>
+    /// Each printable ASCII char is one text element and one column, so a vectorized scan
+    /// replaces the grapheme walk.
+    /// </summary>
+    /// <remarks>
+    /// The scan uses <see cref="SearchValues{T}"/> because the generic
+    /// <c>ContainsAnyExceptInRange</c> allocates on each call until the JIT optimizes it.
+    /// </remarks>
+    internal static bool IsPrintableAscii(ReadOnlySpan<char> text) => !text.ContainsAnyExcept(PrintableAscii);
+
+    private static SearchValues<char> CreatePrintableAscii()
+    {
+        var chars = new char[LastPrintableAscii - FirstPrintableAscii + 1];
+        for (var i = 0; i < chars.Length; i++)
+            chars[i] = (char)(FirstPrintableAscii + i);
+
+        return SearchValues.Create(chars);
+    }
+
+    private static string SliceAscii(string text, int startColumn, int maxColumns)
+    {
+        if (startColumn >= text.Length)
+            return string.Empty;
+
+        var length = Math.Min(maxColumns, text.Length - startColumn);
+        if (startColumn == 0 && length == text.Length)
+            return text;
+
+        return text.Substring(startColumn, length);
+    }
+
+    private static DisplayCellRange ReadCell(ReadOnlySpan<char> text, int index)
+    {
+        var length = StringInfo.GetNextTextElementLength(text[index..]);
+        var columns = GetTextElementWidth(text.Slice(index, length));
+        return new DisplayCellRange(index, length, columns);
+    }
+
+    private static int GetTextElementWidth(ReadOnlySpan<char> element)
     {
         var hasEmojiPresentationSelector = false;
         var hasEmojiCandidate = false;
@@ -327,25 +417,31 @@ public static class DisplayWidth
         var width = 0;
         var sawWideOrEmoji = false;
 
-        foreach (var rune in element.EnumerateRunes())
+        while (!element.IsEmpty)
         {
-            if (rune.Value == 0xFE0F)
+            _ = Rune.DecodeFromUtf16(element, out var rune, out var charsConsumed);
+            element = element[charsConsumed..];
+
+            if (rune.Value == EmojiPresentationSelector)
                 hasEmojiPresentationSelector = true;
-            if (rune.Value == 0x20E3)
+            if (rune.Value == CombiningEnclosingKeycap)
                 hasKeycap = true;
             if (IsEmojiCandidate(rune))
                 hasEmojiCandidate = true;
 
             var runeWidth = GetRuneWidth(rune);
-            if (runeWidth >= 2)
+            if (runeWidth >= WideColumns)
                 sawWideOrEmoji = true;
             width += runeWidth;
         }
 
         if (hasKeycap || (hasEmojiPresentationSelector && hasEmojiCandidate))
-            return 2;
+            return WideColumns;
 
-        return sawWideOrEmoji ? 2 : width;
+        if (sawWideOrEmoji)
+            return WideColumns;
+
+        return width;
     }
 
     private static int GetRuneWidth(Rune rune)
@@ -356,9 +452,12 @@ public static class DisplayWidth
             or UnicodeCategory.Format
             or UnicodeCategory.Control
             or UnicodeCategory.Surrogate)
-            return 0;
+            return ZeroColumns;
 
-        return IsWideOrFullwidth(rune) || IsDefaultEmojiPresentation(rune) ? 2 : 1;
+        if (IsWideOrFullwidth(rune) || IsDefaultEmojiPresentation(rune))
+            return WideColumns;
+
+        return NarrowColumns;
     }
 
     private static bool IsWideOrFullwidth(Rune rune)
@@ -451,5 +550,44 @@ public static class DisplayWidth
         }
 
         return escapeIndex + 1;
+    }
+
+    /// <summary>
+    /// Allocation-free enumerator over the Unicode text elements of a span of text.
+    /// </summary>
+    public ref struct DisplayCellEnumerator
+    {
+        private readonly ReadOnlySpan<char> _text;
+        private int _nextIndex;
+
+        internal DisplayCellEnumerator(ReadOnlySpan<char> text)
+        {
+            _text = text;
+            _nextIndex = 0;
+            Current = default;
+        }
+
+        /// <summary>
+        /// Gets the range and terminal width of the current text element.
+        /// </summary>
+        public DisplayCellRange Current { get; private set; }
+
+        /// <summary>
+        /// Returns this enumerator so that it can be used in a foreach statement.
+        /// </summary>
+        public readonly DisplayCellEnumerator GetEnumerator() => this;
+
+        /// <summary>
+        /// Moves to the next text element and reports whether one is present.
+        /// </summary>
+        public bool MoveNext()
+        {
+            if (_nextIndex >= _text.Length)
+                return false;
+
+            Current = ReadCell(_text, _nextIndex);
+            _nextIndex += Current.Length;
+            return true;
+        }
     }
 }

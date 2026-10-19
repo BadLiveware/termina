@@ -127,7 +127,7 @@ public static class WordWrapper
         var taken = 0;
         var remainingColumns = wordWidth;
 
-        foreach (var cell in DisplayWidth.EnumerateCells(word))
+        foreach (var cell in DisplayWidth.EnumerateCells(word.AsSpan()))
         {
             if (taken + cell.ColumnWidth <= width)
             {

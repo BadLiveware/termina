@@ -160,7 +160,7 @@ public static class StyledWordWrapper
             var pieceStart = -1; // start of the part of this segment that belongs to the current row
             var leading = true;
 
-            foreach (var cell in DisplayWidth.EnumerateCells(text))
+            foreach (var cell in DisplayWidth.EnumerateCells(text.AsSpan()))
             {
                 // A zero-width element at the start of a segment is dropped
                 if (leading && cell.ColumnWidth == 0)
@@ -222,7 +222,7 @@ public static class StyledWordWrapper
 
         for (var s = segmentIndex + 1; s < segments.Count; s++)
         {
-            foreach (var cell in DisplayWidth.EnumerateCells(segments[s].Text))
+            foreach (var cell in DisplayWidth.EnumerateCells(segments[s].Text.AsSpan()))
             {
                 if (cell.ColumnWidth == 0)
                     continue;

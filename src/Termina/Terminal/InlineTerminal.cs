@@ -40,13 +40,13 @@ internal sealed class InlineTerminal : IAnsiTerminal
 
     public void Write(string text)
     {
-        foreach (var cell in DisplayWidth.EnumerateCells(text))
-            WriteTextElement(cell.Text, cell.ColumnWidth);
+        foreach (var cell in DisplayWidth.EnumerateCells(text.AsSpan()))
+            WriteTextElement(CellText.From(text, cell.StartIndex, cell.Length), cell.ColumnWidth);
     }
 
     public void Write(char c)
     {
-        WriteTextElement(c.ToString(), DisplayWidth.GetColumnCount(c));
+        WriteTextElement(CellText.From(c), DisplayWidth.GetColumnCount(c));
     }
 
     public void SetForeground(Color color)

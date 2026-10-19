@@ -338,7 +338,7 @@ public sealed class ScrollableContent : IRenderable, IDisposable
 
         public void WriteAt(int x, int y, char c)
         {
-            WriteAt(x, y, c.ToString());
+            WriteAt(x, y, CellText.From(c));
         }
 
         public void SetForeground(Color color) => _parent.SetForeground(color);

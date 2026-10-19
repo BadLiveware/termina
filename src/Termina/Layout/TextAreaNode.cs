@@ -387,10 +387,10 @@ public sealed class TextAreaNode : TextInputBaseNode
                 break;
 
             var line = lines[lineIndex];
-            var lineText = fullDisplayText.Substring(line.TextStartIndex, line.Length);
+            var lineSpan = fullDisplayText.AsSpan(line.TextStartIndex, line.Length);
             var column = 0;
 
-            foreach (var cell in DisplayWidth.EnumerateCells(lineText))
+            foreach (var cell in DisplayWidth.EnumerateCells(lineSpan))
             {
                 if (column + cell.ColumnWidth > bounds.Width)
                     break;
@@ -435,7 +435,7 @@ public sealed class TextAreaNode : TextInputBaseNode
                         inputContext.SetForeground(Foreground.Value);
                 }
 
-                inputContext.WriteAt(column, row, cell.Text);
+                inputContext.WriteAt(column, row, CellText.From(lineSpan.Slice(cell.StartIndex, cell.Length)));
                 column += cell.ColumnWidth;
             }
         }
@@ -554,8 +554,7 @@ public sealed class TextAreaNode : TextInputBaseNode
             if (i == fullText.Length || fullText[i] == '\n')
             {
                 var logicalLineLength = i - lineStart;
-                var logicalLine = fullText.Substring(lineStart, logicalLineLength);
-                var logicalLineWidth = DisplayWidth.GetColumnCount(logicalLine);
+                var logicalLineWidth = DisplayWidth.GetColumnCount(fullText.AsSpan(lineStart, logicalLineLength));
 
                 if (!_wordWrap || logicalLineWidth <= width)
                 {
@@ -608,7 +607,7 @@ public sealed class TextAreaNode : TextInputBaseNode
                     window++;
 
                 var truncated = pos + window < end;
-                var windowText = text.Substring(pos, window);
+                var windowText = text.AsSpan(pos, window);
                 var columns = 0;
                 breakOffset = 0;
                 var firstCellLength = 0;
@@ -670,8 +669,8 @@ public sealed class TextAreaNode : TextInputBaseNode
                 wordBreak = breakPos;
 
             var wrappedLength = wordBreak - pos;
-            var wrappedText = text.Substring(pos, wrappedLength);
-            result.Add(new WrappedLine(pos, wrappedLength, DisplayWidth.GetColumnCount(wrappedText)));
+            var wrappedColumns = DisplayWidth.GetColumnCount(text.AsSpan(pos, wrappedLength));
+            result.Add(new WrappedLine(pos, wrappedLength, wrappedColumns));
             pos = wordBreak;
 
             // Skip leading whitespace on the new line

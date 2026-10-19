@@ -25,11 +25,6 @@ namespace Termina.Terminal;
 /// </remarks>
 public sealed class DiffingTerminal : IAnsiTerminal, IDisposable
 {
-    // One shared string for each printable ASCII char (0x20 to 0x7E). Strings are immutable, so cells can share them.
-    private static readonly string[] AsciiCells = Enumerable.Range(' ', '~' - ' ' + 1)
-        .Select(c => ((char)c).ToString())
-        .ToArray();
-
     private readonly IAnsiTerminal _inner;
     private FrameBuffer _currentFrame;
     private FrameBuffer _pendingFrame;
@@ -100,12 +95,12 @@ public sealed class DiffingTerminal : IAnsiTerminal, IDisposable
         if (string.IsNullOrEmpty(text))
             return;
 
-        // Printable ASCII is one text element and one column per char. Skip the grapheme parse
-        // and the string that it allocates for each cell. A fill or a plain text line takes this path.
-        if (!text.AsSpan().ContainsAnyExceptInRange(' ', '~'))
+        // Printable ASCII is one text element and one column per char, so skip the grapheme parse.
+        // A fill or a plain text line takes this path.
+        if (DisplayWidth.IsPrintableAscii(text))
         {
             foreach (var c in text)
-                WriteTextElementToBuffer(AsciiCells[c - ' '], 1);
+                WriteTextElementToBuffer(CellText.From(c), 1);
             return;
         }
 
@@ -119,16 +114,16 @@ public sealed class DiffingTerminal : IAnsiTerminal, IDisposable
     /// </summary>
     internal void WriteTextElements(string text)
     {
-        foreach (var cell in DisplayWidth.EnumerateCells(text))
+        foreach (var cell in DisplayWidth.EnumerateCells(text.AsSpan()))
         {
-            WriteTextElementToBuffer(cell.Text, cell.ColumnWidth);
+            WriteTextElementToBuffer(CellText.From(text, cell.StartIndex, cell.Length), cell.ColumnWidth);
         }
     }
 
     /// <inheritdoc />
     public void Write(char c)
     {
-        WriteTextElementToBuffer(c.ToString(), DisplayWidth.GetColumnCount(c));
+        WriteTextElementToBuffer(CellText.From(c), DisplayWidth.GetColumnCount(c));
     }
 
     private void WriteTextElementToBuffer(string text, int columnWidth)

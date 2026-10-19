@@ -95,17 +95,18 @@ public sealed class VirtualTerminal : IAnsiTerminal, IInlineTerminalControl
         if (text.Contains('\u001b'))
             return;
 
-        foreach (var cell in DisplayWidth.EnumerateCells(text))
+        foreach (var cell in DisplayWidth.EnumerateCells(text.AsSpan()))
         {
-            WriteTextElement(cell.Text, cell.ColumnWidth);
+            WriteTextElement(CellText.From(text, cell.StartIndex, cell.Length), cell.ColumnWidth);
         }
     }
 
     /// <inheritdoc />
     public void Write(char c)
     {
-        _rawOutput.Add(c.ToString());
-        WriteTextElement(c.ToString(), DisplayWidth.GetColumnCount(c));
+        var element = CellText.From(c);
+        _rawOutput.Add(element);
+        WriteTextElement(element, DisplayWidth.GetColumnCount(c));
     }
 
     private void WriteTextElement(string text, int columnWidth)
