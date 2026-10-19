@@ -126,8 +126,8 @@ public sealed class VirtualTerminal : IAnsiTerminal, IInlineTerminalControl
 
         if (text == "\t")
         {
-            var nextTab = ((_cursorX / 8) + 1) * 8;
-            while (_cursorX < nextTab && _cursorX < Width)
+            var spaces = TabStop.GetSpaceCount(_cursorX, Width);
+            for (var i = 0; i < spaces; i++)
                 WriteTextElement(" ", 1);
             return;
         }

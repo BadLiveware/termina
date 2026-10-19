@@ -142,12 +142,9 @@ public sealed class DiffingTerminal : IAnsiTerminal, IDisposable
                 _cursorX = 0;
                 return;
             case "\t":
-                // Tab to next 8-column boundary
-                var nextTab = ((_cursorX / 8) + 1) * 8;
-                while (_cursorX < nextTab && _cursorX < Width)
-                {
+                var spaces = TabStop.GetSpaceCount(_cursorX, Width);
+                for (var i = 0; i < spaces; i++)
                     WriteTextElementToBuffer(" ", 1);
-                }
                 return;
         }
 
