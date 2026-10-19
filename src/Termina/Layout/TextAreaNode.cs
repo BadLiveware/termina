@@ -435,7 +435,7 @@ public sealed class TextAreaNode : TextInputBaseNode
                         inputContext.SetForeground(Foreground.Value);
                 }
 
-                inputContext.WriteAt(column, row, CellText.From(lineSpan.Slice(cell.StartIndex, cell.Length)));
+                inputContext.WriteAt(column, row, CellText.From(fullDisplayText, displayIndex, cell.Length));
                 column += cell.ColumnWidth;
             }
         }

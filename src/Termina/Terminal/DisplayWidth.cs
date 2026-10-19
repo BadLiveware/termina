@@ -105,8 +105,7 @@ public static class DisplayWidth
     /// </summary>
     public static int GetColumnCount(char c)
     {
-        ReadOnlySpan<char> single = stackalloc char[1] { c };
-        return GetColumnCount(single);
+        return GetColumnCount(new ReadOnlySpan<char>(in c));
     }
 
     /// <summary>
@@ -171,12 +170,12 @@ public static class DisplayWidth
             return string.Empty;
 
         var span = text.AsSpan();
+        if (IsPrintableAscii(span))
+            return TruncateStartAscii(text, maxColumns);
+
         var remaining = GetColumnCount(span);
         if (remaining <= maxColumns)
             return text;
-
-        if (IsPrintableAscii(span))
-            return text[^maxColumns..];
 
         foreach (var cell in EnumerateCells(span))
         {
@@ -388,6 +387,14 @@ public static class DisplayWidth
             chars[i] = (char)(FirstPrintableAscii + i);
 
         return SearchValues.Create(chars);
+    }
+
+    private static string TruncateStartAscii(string text, int maxColumns)
+    {
+        if (text.Length <= maxColumns)
+            return text;
+
+        return text[^maxColumns..];
     }
 
     private static string SliceAscii(string text, int startColumn, int maxColumns)

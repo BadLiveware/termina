@@ -395,8 +395,7 @@ public sealed class CopyableTextNode : LayoutNode, IFocusable, IInvalidatingNode
     private void RenderLine(IRenderContext context, int row, RenderedLine line, int width)
     {
         var column = 0;
-        var lineSpan = line.Text.AsSpan();
-        foreach (var cell in DisplayWidth.EnumerateCells(lineSpan))
+        foreach (var cell in DisplayWidth.EnumerateCells(line.Text.AsSpan()))
         {
             if (column >= width)
                 break;
@@ -422,7 +421,7 @@ public sealed class CopyableTextNode : LayoutNode, IFocusable, IInvalidatingNode
                 context.SetForeground(Foreground);
             }
 
-            context.WriteAt(column, row, CellText.From(lineSpan.Slice(cell.StartIndex, cell.Length)));
+            context.WriteAt(column, row, CellText.From(line.Text, cell.StartIndex, cell.Length));
             column += cell.ColumnWidth;
         }
 
