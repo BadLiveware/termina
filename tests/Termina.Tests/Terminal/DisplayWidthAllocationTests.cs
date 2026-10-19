@@ -1,6 +1,7 @@
 // Copyright (c) Petabridge, LLC. All rights reserved.
 // Licensed under the Apache 2.0 license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using Termina.Layout;
 using Termina.Rendering;
 using Termina.Terminal;
@@ -20,68 +21,71 @@ public class DisplayWidthAllocationTests
 {
     private const string MixedText = "mixed \u65E5\u672C \uD83C\uDF89 text";
 
-    private const int Iterations = 64;
+    private const int CallsPerRound = 64;
+
+    private const int ClippedLength = 4;
+
+    private static readonly TimeSpan SteadyStateBudget = TimeSpan.FromSeconds(10);
 
     [Fact]
     public void GetColumnCount_allocates_nothing()
     {
-        Assert.Equal(0, Measure(() => DisplayWidth.GetColumnCount(MixedText)));
+        AssertSteadyStateAllocation(0, () => DisplayWidth.GetColumnCount(MixedText));
     }
 
     [Fact]
     public void GetColumnCount_of_a_char_allocates_nothing()
     {
-        Assert.Equal(0, Measure(() => DisplayWidth.GetColumnCount('\u65E5')));
+        AssertSteadyStateAllocation(0, () => DisplayWidth.GetColumnCount('\u65E5'));
     }
 
     [Fact]
     public void GetStringIndexForColumnCount_allocates_nothing()
     {
-        Assert.Equal(0, Measure(() => DisplayWidth.GetStringIndexForColumnCount(MixedText, 8)));
+        AssertSteadyStateAllocation(0, () => DisplayWidth.GetStringIndexForColumnCount(MixedText, 8));
     }
 
     [Fact]
     public void TruncateToColumns_allocates_nothing_when_the_text_fits()
     {
         var columns = DisplayWidth.GetColumnCount(MixedText);
-        Assert.Equal(0, Measure(() => DisplayWidth.TruncateToColumns(MixedText, columns)));
+        AssertSteadyStateAllocation(0, () => DisplayWidth.TruncateToColumns(MixedText, columns));
     }
 
     [Fact]
     public void TruncateStartToColumns_allocates_nothing_when_the_text_fits()
     {
         var columns = DisplayWidth.GetColumnCount(MixedText);
-        Assert.Equal(0, Measure(() => DisplayWidth.TruncateStartToColumns(MixedText, columns)));
+        AssertSteadyStateAllocation(0, () => DisplayWidth.TruncateStartToColumns(MixedText, columns));
     }
 
     [Fact]
     public void SliceByColumns_allocates_nothing_when_the_text_fits()
     {
         var columns = DisplayWidth.GetColumnCount(MixedText);
-        Assert.Equal(0, Measure(() => DisplayWidth.SliceByColumns(MixedText, 0, columns)));
+        AssertSteadyStateAllocation(0, () => DisplayWidth.SliceByColumns(MixedText, 0, columns));
     }
 
     [Fact]
     public void SanitizeTerminalText_allocates_nothing_when_the_text_is_clean()
     {
-        Assert.Equal(0, Measure(() => DisplayWidth.SanitizeTerminalText(MixedText)));
+        AssertSteadyStateAllocation(0, () => DisplayWidth.SanitizeTerminalText(MixedText));
     }
 
     [Fact]
     public void WriteAt_allocates_nothing_when_the_text_fits()
     {
         var context = new RegionRenderContext(new NullTerminal(), 0, 0, 80, 24);
-        Assert.Equal(0, Measure(() => context.WriteAt(0, 0, MixedText)));
+        AssertSteadyStateAllocation(0, () => context.WriteAt(0, 0, MixedText));
     }
 
     [Fact]
     public void TruncateToColumns_allocates_only_the_clipped_string()
     {
         const string ascii = "0123456789";
-        var perCall = Measure(() => DisplayWidth.TruncateToColumns(ascii, 4)) / Iterations;
-        var stringSize = Measure(() => new string('x', 4)) / Iterations;
-
-        Assert.Equal(stringSize, perCall);
+        AssertSteadyStateAllocation(
+            StringSize(ClippedLength),
+            () => DisplayWidth.TruncateToColumns(ascii, ClippedLength));
     }
 
     [Fact]
@@ -89,11 +93,11 @@ public class DisplayWidthAllocationTests
     {
         var terminal = new DiffingTerminal(new NullTerminal());
 
-        Assert.Equal(0, Measure(() =>
+        AssertSteadyStateAllocation(0, () =>
         {
             terminal.MoveTo(0, 0);
             terminal.Write("status: ready");
-        }));
+        });
     }
 
     [Fact]
@@ -102,42 +106,71 @@ public class DisplayWidthAllocationTests
         var terminal = new DiffingTerminal(new NullTerminal());
         const string wide = "\u65E5";
 
-        Assert.Equal(0, Measure(() =>
+        AssertSteadyStateAllocation(0, () =>
         {
             terminal.MoveTo(0, 0);
             terminal.Write(wide);
-        }));
+        });
     }
 
     [Fact]
     public void WriteAt_of_an_ascii_char_allocates_nothing()
     {
         var context = new RegionRenderContext(new NullTerminal(), 0, 0, 80, 24);
-        Assert.Equal(0, Measure(() => context.WriteAt(0, 0, 'x')));
+        AssertSteadyStateAllocation(0, () => context.WriteAt(0, 0, 'x'));
     }
 
     [Fact]
     public void SliceByColumns_allocates_only_the_clipped_string()
     {
-        var perCall = Measure(() => DisplayWidth.SliceByColumns(MixedText, 2, 4)) / Iterations;
-        var stringSize = Measure(() => new string('x', 4)) / Iterations;
-
-        Assert.Equal(stringSize, perCall);
+        AssertSteadyStateAllocation(
+            StringSize(ClippedLength),
+            () => DisplayWidth.SliceByColumns(MixedText, 2, ClippedLength));
     }
 
-    private static long Measure(Action action)
+    /// <summary>
+    /// Asserts the bytes that one call allocates once the runtime runs optimized code.
+    /// </summary>
+    /// <remarks>
+    /// With tiered compilation, the runtime first runs unoptimized code and replaces it with
+    /// optimized code on a background thread later. Unoptimized code can allocate where optimized
+    /// code does not: the generic <c>ContainsAnyExceptInRange</c> allocated 96 bytes on each call
+    /// until the JIT optimized it. When the replacement happens depends on the test order and on
+    /// the other tests that run in parallel. So the test measures rounds of calls until one round
+    /// allocates the expected bytes, or until the budget ends. A regression allocates in every
+    /// round, so the test fails with the lowest round it measured.
+    /// </remarks>
+    private static void AssertSteadyStateAllocation(long expectedBytesPerCall, Action action)
     {
-        for (var i = 0; i < Iterations; i++)
-            action();
+        var expectedBytesPerRound = expectedBytesPerCall * CallsPerRound;
+        var budget = Stopwatch.StartNew();
+        var lowestBytesPerRound = long.MaxValue;
 
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
+        while (lowestBytesPerRound > expectedBytesPerRound && budget.Elapsed < SteadyStateBudget)
+            lowestBytesPerRound = Math.Min(lowestBytesPerRound, MeasureRound(action));
 
+        Assert.True(
+            lowestBytesPerRound == expectedBytesPerRound,
+            $"Expected {expectedBytesPerCall} bytes for each call. The lowest round of {CallsPerRound} calls in "
+            + $"{SteadyStateBudget.TotalSeconds} s allocated {lowestBytesPerRound} bytes.");
+    }
+
+    private static long MeasureRound(Action action)
+    {
         var before = GC.GetAllocatedBytesForCurrentThread();
-        for (var i = 0; i < Iterations; i++)
+        for (var i = 0; i < CallsPerRound; i++)
             action();
 
         return GC.GetAllocatedBytesForCurrentThread() - before;
+    }
+
+    private static long StringSize(int length)
+    {
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        var text = new string('x', length);
+        var size = GC.GetAllocatedBytesForCurrentThread() - before;
+        GC.KeepAlive(text);
+        return size;
     }
 
     private sealed class NullTerminal : IAnsiTerminal
